@@ -24,6 +24,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hadoop.fs.*;
+import org.apache.hadoop.hdfs.*;
 
 public class SIMR extends Configured implements Tool {
 
@@ -114,7 +116,12 @@ public class SIMR extends Configured implements Tool {
 						OutputCollector<Text, Text> out,
 						Reporter reporter) throws IOException {
 			//To change body of implemented methods use File | Settings | File Templates.
-			out.collect(new Text(getLocalIP()), new Text("a"));
+			Configuration conf = new Configuration();
+			FileSystem fs = FileSystem.get(conf);
+			FSDataOutputStream outf = fs.create(new Path(getLocalIP()), true);
+			outf.close();
+
+//			out.collect(new Text(getLocalIP()), new Text(""));
 		}
 	}
 
@@ -138,7 +145,8 @@ public class SIMR extends Configured implements Tool {
 		job.setInputFormat(RandomInputFormat.class);
 		job.setMapperClass(MapClient.class);
 //		job.setReducerClass(IdentityReducer.class);
-		job.setOutputFormat(TextOutputFormat.class);
+//		job.setOutputFormat(TextOutputFormat.class);
+		job.setOutputFormat(NullOutputFormat.class);
 
 		JobClient client = new JobClient(job);
 		ClusterStatus cluster = client.getClusterStatus();
