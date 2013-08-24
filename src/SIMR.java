@@ -34,7 +34,6 @@ public class SIMR extends Configured implements Tool {
 		 */
 		public InputSplit[] getSplits(JobConf job,
 									  int numSplits) throws IOException {
-//			int numSplits = new JobClient().getClusterStatus().getTaskTrackers();
 			InputSplit[] result = new InputSplit[numSplits];
 			Path outDir = org.apache.hadoop.mapred.FileOutputFormat.getOutputPath(job);
 			for(int i=0; i < result.length; ++i) {
@@ -205,7 +204,7 @@ public class SIMR extends Configured implements Tool {
 		job.setInputFormat(RandomInputFormat.class);
 		job.setMapperClass(MapClient.class);
 //		job.setReducerClass(IdentityReducer.class);
-		job.setOutputFormat(SequenceFileOutputFormat.class);
+		job.setOutputFormat(TextOutputFormat.class);
 
 		JobClient client = new JobClient(job);
 		ClusterStatus cluster = client.getClusterStatus();
