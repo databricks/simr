@@ -109,9 +109,6 @@ public class SIMR extends Configured implements Tool {
 	static class MapClient extends MapReduceBase
 			implements Mapper<Object, Text, Text, Text>{
 
-		private final static IntWritable one = new IntWritable(1);
-		private Text word = new Text();
-
 		@Override
 		public void map(Object key, Text value,
 						OutputCollector<Text, Text> out,
@@ -120,70 +117,6 @@ public class SIMR extends Configured implements Tool {
 			out.collect(new Text(getLocalIP()), new Text("a"));
 		}
 	}
-
-//	static class Map extends MapReduceBase
-//			implements org.apache.hadoop.mapred.Mapper<WritableComparable, Writable,
-//			BytesWritable, BytesWritable> {
-//
-//		private long numBytesToWrite;
-//		private int minKeySize;
-//		private int keySizeRange;
-//		private int minValueSize;
-//		private int valueSizeRange;
-//		private Random random = new Random();
-//		private BytesWritable randomKey = new BytesWritable();
-//		private BytesWritable randomValue = new BytesWritable();
-//
-//		private void randomizeBytes(byte[] data, int offset, int length) {
-//			for(int i=offset + length - 1; i >= offset; --i) {
-//				data[i] = (byte) random.nextInt(256);
-//			}
-//		}
-//
-//		/**
-//		 * Given an output filename, write a bunch of random records to it.
-//		 */
-//		public void map(WritableComparable key,
-//						Writable value,
-//						OutputCollector<BytesWritable, BytesWritable> output,
-//						Reporter reporter) throws IOException {
-//			int itemCount = 0;
-//			while (numBytesToWrite > 0) {
-//				int keyLength = minKeySize +
-//						(keySizeRange != 0 ? random.nextInt(keySizeRange) : 0);
-//				randomKey.setSize(keyLength);
-//				randomizeBytes(randomKey.getBytes(), 0, randomKey.getLength());
-//				int valueLength = minValueSize +
-//						(valueSizeRange != 0 ? random.nextInt(valueSizeRange) : 0);
-//				randomValue.setSize(valueLength);
-//				randomizeBytes(randomValue.getBytes(), 0, randomValue.getLength());
-//				output.collect(randomKey, randomValue);
-//				numBytesToWrite -= keyLength + valueLength;
-//				if (++itemCount % 200 == 0) {
-//					reporter.setStatus("wrote record " + itemCount + ". " +
-//							numBytesToWrite + " bytes left.");
-//				}
-//			}
-//			reporter.setStatus("done with " + itemCount + " records.");
-//		}
-//
-//		/**
-//		 * Save the values out of the configuaration that we need to write
-//		 * the data.
-//		 */
-//		@Override
-//		public void configure(JobConf job) {
-//			numBytesToWrite = job.getLong("test.randomwrite.bytes_per_map",
-//					1*1024*1024*1024);
-//			minKeySize = job.getInt("test.randomwrite.min_key", 10);
-//			keySizeRange =
-//					job.getInt("test.randomwrite.max_key", 1000) - minKeySize;
-//			minValueSize = job.getInt("test.randomwrite.min_value", 0);
-//			valueSizeRange =
-//					job.getInt("test.randomwrite.max_value", 20000) - minValueSize;
-//		}
-//
-//	}
 
 	public int run(String[] args) throws Exception {
 		if (args.length == 0) {
@@ -196,7 +129,7 @@ public class SIMR extends Configured implements Tool {
 		JobConf job = new JobConf(getConf());
 
 		job.setJarByClass(SIMR.class);
-		job.setJobName("new SIMR");
+		job.setJobName("SIMR2");
 		org.apache.hadoop.mapred.FileOutputFormat.setOutputPath(job, outDir);
 
 		job.setOutputKeyClass(Text.class);
@@ -205,7 +138,7 @@ public class SIMR extends Configured implements Tool {
 		job.setInputFormat(RandomInputFormat.class);
 		job.setMapperClass(MapClient.class);
 //		job.setReducerClass(IdentityReducer.class);
-		job.setOutputFormat(NullOutputFormat.class);
+		job.setOutputFormat(TextOutputFormat.class);
 
 		JobClient client = new JobClient(job);
 		ClusterStatus cluster = client.getClusterStatus();
@@ -217,7 +150,7 @@ public class SIMR extends Configured implements Tool {
 
 		Date startTime = new Date();
 		System.out.println("Job started: " + startTime + " with " + clusterSize + " task trackers");
-		job.set("clustersize", clusterSize.toString());
+//		job.set("clustersize", clusterSize.toString());
 		JobClient.runJob(job);
 		Date endTime = new Date();
 		System.out.println("Job ended: " + endTime);
