@@ -208,14 +208,16 @@ public class SIMR extends Configured implements Tool {
 		job.setOutputFormat(SequenceFileOutputFormat.class);
 
 		JobClient client = new JobClient(job);
-		job.setNumMapTasks(client.getClusterStatus().getTaskTrackers());
 		ClusterStatus cluster = client.getClusterStatus();
+		Integer clusterSize = cluster.getTaskTrackers();
+
 
 		// reducer NONE
 		job.setNumReduceTasks(0);
 
 		Date startTime = new Date();
-		System.out.println("Job started: " + startTime);
+		System.out.println("Job started: " + startTime + " with " + clusterSize + " task trackers");
+		job.set("clustersize", clusterSize.toString());
 		JobClient.runJob(job);
 		Date endTime = new Date();
 		System.out.println("Job ended: " + endTime);
