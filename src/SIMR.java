@@ -33,8 +33,8 @@ public class SIMR extends Configured implements Tool {
 		 * set to the filename of the output file.
 		 */
 		public InputSplit[] getSplits(JobConf job,
-									  int numSplits_) throws IOException {
-			int numSplits = new JobClient().getClusterStatus().getTaskTrackers();
+									  int numSplits) throws IOException {
+//			int numSplits = new JobClient().getClusterStatus().getTaskTrackers();
 			InputSplit[] result = new InputSplit[numSplits];
 			Path outDir = org.apache.hadoop.mapred.FileOutputFormat.getOutputPath(job);
 			for(int i=0; i < result.length; ++i) {
