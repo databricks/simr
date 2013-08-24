@@ -16,6 +16,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.lib.IdentityReducer;
+import org.apache.hadoop.mapred.lib.NullOutputFormat;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -204,7 +205,7 @@ public class SIMR extends Configured implements Tool {
 		job.setInputFormat(RandomInputFormat.class);
 		job.setMapperClass(MapClient.class);
 //		job.setReducerClass(IdentityReducer.class);
-		job.setOutputFormat(TextOutputFormat.class);
+		job.setOutputFormat(NullOutputFormat.class);
 
 		JobClient client = new JobClient(job);
 		ClusterStatus cluster = client.getClusterStatus();
