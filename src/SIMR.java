@@ -120,9 +120,11 @@ public class SIMR {
 			} catch (Exception ex) {}
 
 			FSDataOutputStream outf = fs.create(new Path(tmpStr + "/" + getLocalIP()), true);
+			outf.close();
+
+
 //			String p = context.getConfiguration().get("passing");
 //			context.write(new Text(p),new Text(""));
-			outf.close();
 
 		}
 	}
@@ -141,6 +143,12 @@ public class SIMR {
 
 		conf.set("simr-tmpdir", tmpPath.toString());
  		Job job = new Job(conf, "SIMR3");
+		for (CounterGroup cg : job.getCounters()) {
+		 for (Counter c : cg) {
+			 System.out.println("Counter: " + c.getName() + " = " + c.getValue());
+		 }
+		}
+		System.exit(0);
 
 		job.setNumReduceTasks(0);
 		job.setJarByClass(SIMR.class);
