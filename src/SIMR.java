@@ -132,7 +132,7 @@ public class SIMR {
 		}
 		String outDir = otherArgs[0];
 
-		Path tmpPath = new Path(outDir, "/simr-meta");
+		Path tmpPath = new Path(outDir, "simr-meta");
 
 		conf.set("simr-tmpdir", tmpPath.getName());
  		Job job = new Job(conf, "SIMR3");
