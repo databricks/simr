@@ -110,12 +110,13 @@ public class SIMR {
 
 		public void map(Object key, Text value, Context context
 		) throws IOException, InterruptedException {
-
 			Configuration conf = new Configuration();
+			Configuration conf2 = context.getConfiguration();
+			String tmpStr = conf2.get("simr-tmpdir");
 			FileSystem fs = FileSystem.get(conf);
-			FSDataOutputStream outf = fs.create(new Path(getLocalIP()), true);
-			String p = context.getConfiguration().get("passing");
-			context.write(new Text(p),new Text(""));
+			FSDataOutputStream outf = fs.create(new Path(tmpStr + "/" + getLocalIP()), true);
+//			String p = context.getConfiguration().get("passing");
+//			context.write(new Text(p),new Text(""));
 			outf.close();
 
 		}
@@ -129,9 +130,11 @@ public class SIMR {
 			System.err.println("Usage: SIMR <out>");
 			System.exit(2);
 		}
+		String outDir = otherArgs[0];
 
+		Path tmpPath = new Path(outDir + "/simr-meta");
 
-		conf.set("passing", "params");
+		conf.set("simr-tmpdir", tmpPath.getName());
  		Job job = new Job(conf, "SIMR3");
 
 		job.setNumReduceTasks(0);
@@ -141,8 +144,11 @@ public class SIMR {
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 		job.setInputFormatClass(RandomInputFormat.class);
-//		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
-		FileOutputFormat.setOutputPath(job, new Path(otherArgs[0]));
+		FileOutputFormat.setOutputPath(job, new Path(outDir));
+
+		FileSystem fs = FileSystem.get(conf);
+		fs.mkdirs(tmpPath);
+
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 
