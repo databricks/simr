@@ -114,6 +114,11 @@ public class SIMR {
 			Configuration conf2 = context.getConfiguration();
 			String tmpStr = conf2.get("simr-tmpdir");
 			FileSystem fs = FileSystem.get(conf);
+
+			try {
+				fs.mkdirs(new Path(tmpStr));
+			} catch (Exception ex) {}
+
 			FSDataOutputStream outf = fs.create(new Path(tmpStr + "/" + getLocalIP()), true);
 //			String p = context.getConfiguration().get("passing");
 //			context.write(new Text(p),new Text(""));
@@ -146,14 +151,6 @@ public class SIMR {
 		job.setInputFormatClass(RandomInputFormat.class);
 
 		FileOutputFormat.setOutputPath(job, new Path(outDir));
-
-		FileSystem fs = FileSystem.get(conf);
-		System.out.println("Creating: " + tmpPath.toString());
-		try {
-		fs.mkdirs(tmpPath);
-		} catch (Exception ex) {
-			System.out.println("weird excp") ;
-		}
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
