@@ -131,10 +131,10 @@ public class SIMR {
 		}
 
 
+ 		Job job = new Job(conf, "SIMR3");
 		int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
 		System.out.println("Cluster size: " + clusterSize);
 		conf.set("NumTaskTrackers", Integer.toString(clusterSize));
- 		Job job = new Job(conf, "SIMR3");
 
 		job.setNumReduceTasks(0);
 		job.setJarByClass(SIMR.class);
