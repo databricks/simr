@@ -29,7 +29,7 @@ public class SIMR {
 		 * set to the filename of the output file.
 		 */
 		public List<InputSplit> getSplits(JobContext context) throws IOException {
-			int clusterSize = Integer.parseInt(context.getConfiguration().get("NumTaskTrackers"));
+			int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
 			InputSplit[] result = new InputSplit[clusterSize];
 //			Path outDir = org.apache.hadoop.mapred.FileOutputFormat.getOutputPath(job);
 			for(int i=0; i < result.length; ++i) {
@@ -47,7 +47,7 @@ public class SIMR {
 			Path name;
 			boolean first = true;
 
-			public void initialize(InputSplit split, TaskAttemptContext context) throws java.io.IOException, java.lang.InterruptedException {
+			public void initialize(InputSplit split, TaskAttemptContext context)  {
 				name = ((FileSplit) split).getPath();
 			}
 
@@ -59,11 +59,11 @@ public class SIMR {
 				return false;
 			}
 
-			public Text getCurrentKey() throws java.io.IOException, java.lang.InterruptedException {
+			public Text getCurrentKey() {
 				return new Text(name.getName());
 			}
 
-			public Text getCurrentValue() throws java.io.IOException, java.lang.InterruptedException {
+			public Text getCurrentValue() {
 				return new Text("");
 			}
 
@@ -72,11 +72,8 @@ public class SIMR {
 			public float getProgress() { return 0.0f; }
 		}
 
-		public RecordReader<Text, Text> createRecordReader(InputSplit split, TaskAttemptContext context) throws java.io.IOException, InterruptedException {
-//
-//		public RecordReader<Text, Text> getRecordReader(InputSplit split,
-//														JobConf job,
-//														Reporter reporter) throws IOException {
+		public RecordReader<Text, Text> createRecordReader(InputSplit split,
+														   TaskAttemptContext context) {
 			return new RandomRecordReader();
 		}
 	}
@@ -105,7 +102,7 @@ public class SIMR {
    }
 
 	public static class MyMapper
-			extends Mapper<Object, Text, Text, IntWritable>{
+			extends Mapper<Object, Text, Text, Text>{
 
 		private final static IntWritable one = new IntWritable(1);
 		private Text word = new Text();
@@ -116,6 +113,8 @@ public class SIMR {
 			Configuration conf = new Configuration();
 			FileSystem fs = FileSystem.get(conf);
 			FSDataOutputStream outf = fs.create(new Path(getLocalIP()), true);
+			String p = context.getConfiguration().get("passing");
+			context.write(new Text(p),new Text());
 			outf.close();
 
 		}
@@ -132,9 +131,7 @@ public class SIMR {
 
 
  		Job job = new Job(conf, "SIMR3");
-		int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
-		System.out.println("Cluster size: " + clusterSize);
-		conf.set("NumTaskTrackers", Integer.toString(clusterSize));
+		conf.set("passing", "params");
 
 		job.setNumReduceTasks(0);
 		job.setJarByClass(SIMR.class);
