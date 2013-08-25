@@ -144,9 +144,11 @@ public class SIMR {
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 		job.setInputFormatClass(RandomInputFormat.class);
+
 		FileOutputFormat.setOutputPath(job, new Path(outDir));
 
 		FileSystem fs = FileSystem.get(conf);
+		System.out.println("Creating: " + tmpPath.getName());
 		fs.mkdirs(tmpPath);
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
