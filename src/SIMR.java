@@ -114,8 +114,8 @@ public class SIMR {
 			Configuration conf = new Configuration();
 			FileSystem fs = FileSystem.get(conf);
 			FSDataOutputStream outf = fs.create(new Path(getLocalIP()), true);
-//			String p = context.getConfiguration().get("passing");
-//			context.write(new Text(p),new Text());
+			String p = context.getConfiguration().get("passing");
+			context.write(new Text(p),new Text(""));
 			outf.close();
 
 		}
@@ -131,8 +131,8 @@ public class SIMR {
 		}
 
 
- 		Job job = new Job(conf, "SIMR3");
 		conf.set("passing", "params");
+ 		Job job = new Job(conf, "SIMR3");
 
 		job.setNumReduceTasks(0);
 		job.setJarByClass(SIMR.class);
