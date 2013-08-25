@@ -132,7 +132,7 @@ public class SIMR {
 		}
 		String outDir = otherArgs[0];
 
-		Path tmpPath = new Path(outDir + "/simr-meta");
+		Path tmpPath = new Path(outDir, "/simr-meta");
 
 		conf.set("simr-tmpdir", tmpPath.getName());
  		Job job = new Job(conf, "SIMR3");
@@ -149,7 +149,7 @@ public class SIMR {
 
 		FileSystem fs = FileSystem.get(conf);
 		System.out.println("Creating: " + tmpPath.toString());
-//		fs.mkdirs(tmpPath);
+		fs.mkdirs(tmpPath);
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
