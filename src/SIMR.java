@@ -29,7 +29,8 @@ public class SIMR {
 		 * set to the filename of the output file.
 		 */
 		public List<InputSplit> getSplits(JobContext context) throws IOException {
-			int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
+//			int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
+			int clusterSize = 2;
 			InputSplit[] result = new InputSplit[clusterSize];
 //			Path outDir = org.apache.hadoop.mapred.FileOutputFormat.getOutputPath(job);
 			for(int i=0; i < result.length; ++i) {
