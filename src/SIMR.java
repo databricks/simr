@@ -114,8 +114,8 @@ public class SIMR {
 			Configuration conf = new Configuration();
 			FileSystem fs = FileSystem.get(conf);
 			FSDataOutputStream outf = fs.create(new Path(getLocalIP()), true);
-			String p = context.getConfiguration().get("passing");
-			context.write(new Text(p),new Text());
+//			String p = context.getConfiguration().get("passing");
+//			context.write(new Text(p),new Text());
 			outf.close();
 
 		}
