@@ -147,9 +147,9 @@ public class SIMR {
 
 		FileOutputFormat.setOutputPath(job, new Path(outDir));
 
-		FileSystem fs = FileSystem.get(conf);
-		System.out.println("Creating: " + tmpPath.getName());
-		fs.mkdirs(tmpPath);
+//		FileSystem fs = FileSystem.get(conf);
+//		System.out.println("Creating: " + tmpPath.getName());
+//		fs.mkdirs(tmpPath);
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
