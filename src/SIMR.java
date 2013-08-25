@@ -149,7 +149,7 @@ public class SIMR {
 
 		FileSystem fs = FileSystem.get(conf);
 		System.out.println("Creating: " + tmpPath.toString());
-		fs.mkdirs(tmpPath);
+//		fs.mkdirs(tmpPath);
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
