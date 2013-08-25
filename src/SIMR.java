@@ -149,7 +149,11 @@ public class SIMR {
 
 		FileSystem fs = FileSystem.get(conf);
 		System.out.println("Creating: " + tmpPath.toString());
+		try {
 		fs.mkdirs(tmpPath);
+		} catch (Exception ex) {
+			System.out.println("weird excp") ;
+		}
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
