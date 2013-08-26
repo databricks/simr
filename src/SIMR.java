@@ -32,8 +32,15 @@ public class SIMR {
 		 */
 		public List<InputSplit> getSplits(JobContext context) throws IOException {
 			Configuration cf = context.getConfiguration();
+			Map<String,String> m = new TreeMap<String,String>();
 			for (Map.Entry<String, String> entry : cf) {
-				System.out.println(entry.getKey() + " = " + entry.getValue());
+				m.put(entry.getKey(), entry.getValue());
+			}
+			for(Map.Entry<String,String> entry : m.entrySet()) {
+				String key = entry.getKey();
+				String value = entry.getValue();
+
+				System.out.println(key + " => " + value);
 			}
 //			int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
 			int clusterSize = 2;
