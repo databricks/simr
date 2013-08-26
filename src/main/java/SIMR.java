@@ -138,7 +138,7 @@ public class SIMR {
 				}
 
 			}
-			context.write(new Text(firstMapperIP),new Text(""));
+			context.write(new Text(firstMapperIP),new Text("SPARK MASTER"));
 
 		}
 	}
