@@ -128,9 +128,15 @@ public class SIMR {
 			FSDataOutputStream outf = fs.create(new Path(tmpStr + "/" + getLocalIP()), true);
 			outf.close();
 
+			long firstMapperTime = Long.MAX_VALUE;
+			String firstMapperIP = "";
 			for (FileStatus fstat : fs.listStatus(new Path(tmpStr + "/"))) {
-				context.write(new Text(fstat.getPath().getName()),
-						new Text(Long.toString(fstat.getModificationTime())));
+				long modTime = fstat.getModificationTime();
+				if (modTime < firstMapperTime) {
+					firstMapperTime = modTime;
+					firstMapperIP = fstat.getPath().getName();
+				}
+
 			}
 //			String p = context.getConfiguration().get("passing");
 //			context.write(new Text(p),new Text(""));
