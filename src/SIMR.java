@@ -43,7 +43,7 @@ public class SIMR {
 				System.out.println(key + " => " + value);
 			}
 //			int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
-			int clusterSize = 2;
+			int clusterSize = 1;
 			InputSplit[] result = new InputSplit[clusterSize];
 //			Path outDir = org.apache.hadoop.mapred.FileOutputFormat.getOutputPath(job);
 			for(int i=0; i < result.length; ++i) {
