@@ -16,11 +16,12 @@ import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.*;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.fs.*;
+import org.apache.hadoop.conf.Configured;
+
 
 public class SIMR {
 
@@ -142,16 +143,6 @@ public class SIMR {
 			System.exit(2);
 		}
 
-		JobConf jc = new JobConf();
-
-		jc.setJarByClass(RandomInputFormat.class);
-		jc.setJobName("random-writer");
-
-		jc.setOutputKeyClass(BytesWritable.class);
-		jc.setOutputValueClass(BytesWritable.class);
-
-
-		System.out.println("sizish: " + new JobClient().getClusterStatus().getTaskTrackers());
 
 		String outDir = otherArgs[0];
 
@@ -169,6 +160,12 @@ public class SIMR {
 		job.setInputFormatClass(RandomInputFormat.class);
 
 		FileOutputFormat.setOutputPath(job, new Path(outDir));
+
+		for (CounterGroup cg : job.getCounters()) {
+			for (Counter c : cg) {
+				System.out.println(c.getName() + " = " + c.getValue());
+			}
+		}
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
