@@ -143,6 +143,14 @@ public class SIMR {
 		}
 
 		JobConf jc = new JobConf();
+
+		jc.setJarByClass(RandomInputFormat.class);
+		jc.setJobName("random-writer");
+
+		jc.setOutputKeyClass(BytesWritable.class);
+		jc.setOutputValueClass(BytesWritable.class);
+
+
 		System.out.println("sizish: " + new JobClient().getClusterStatus().getTaskTrackers());
 
 		String outDir = otherArgs[0];
