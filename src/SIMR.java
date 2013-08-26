@@ -31,8 +31,10 @@ public class SIMR {
 		 * set to the filename of the output file.
 		 */
 		public List<InputSplit> getSplits(JobContext context) throws IOException {
-
-			System.out.println((new JobClient().getClusterStatus().getActiveTrackerNames().size()));
+			Configuration cf = context.getConfiguration();
+			for (Map.Entry<String, String> entry : cf) {
+				System.out.println(entry.getKey() + " = " + entry.getValue());
+			}
 //			int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
 			int clusterSize = 2;
 			InputSplit[] result = new InputSplit[clusterSize];
@@ -160,12 +162,6 @@ public class SIMR {
 		job.setInputFormatClass(RandomInputFormat.class);
 
 		FileOutputFormat.setOutputPath(job, new Path(outDir));
-
-		for (CounterGroup cg : job.getCounters()) {
-			for (Counter c : cg) {
-				System.out.println(c.getName() + " = " + c.getValue());
-			}
-		}
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
