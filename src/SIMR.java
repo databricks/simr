@@ -11,6 +11,7 @@ import java.util.*;
 import java.net.*;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.JobClient;
@@ -20,7 +21,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.fs.*;
-import org.apache.hadoop.conf.Configured;
 
 
 public class SIMR {
@@ -149,6 +149,9 @@ public class SIMR {
 		}
 	}
 
+	static class DummyConf extends Configured {
+
+	}
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
@@ -158,6 +161,9 @@ public class SIMR {
 			System.exit(2);
 		}
 
+		JobConf jc = new JobConf(new DummyConf().getConf());
+	    JobClient jcl = new JobClient(jc);
+		System.out.println("System size = " + jcl.getClusterStatus().getTaskTrackers());
 
 		String outDir = otherArgs[0];
 
