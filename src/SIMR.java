@@ -16,6 +16,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.SequenceFileOutputFormat;
+import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -161,8 +163,23 @@ public class SIMR {
 			System.exit(2);
 		}
 
-		JobConf jc = new JobConf(new DummyConf().getConf());
-	    JobClient jcl = new JobClient(jc);
+		DummyConf dummyJob = new DummyConf();
+		JobConf jc = new JobConf(dummyJob.getConf());
+
+		jc.setJarByClass(DummyConf.class);
+		jc.setJobName("random-writer");
+//		org.apache.hadoop.mapred.FileOutputFormat.setOutputPath(job, outDir);
+
+		jc.setOutputKeyClass(BytesWritable.class);
+		jc.setOutputValueClass(BytesWritable.class);
+
+//		jc.setInputFormat(RandomInputFormat.class);
+//		jc.setMapperClass(Map.class);
+		jc.setReducerClass(IdentityReducer.class);
+		jc.setOutputFormat(SequenceFileOutputFormat.class);
+
+		JobClient jcl = new JobClient(jc);
+
 		System.out.println("System size = " + jcl.getClusterStatus().getTaskTrackers());
 
 		String outDir = otherArgs[0];
