@@ -29,6 +29,7 @@ public class SIMR {
 		 * set to the filename of the output file.
 		 */
 		public List<InputSplit> getSplits(JobContext context) throws IOException {
+			System.out.println((new JobClient().getClusterStatus().getActiveTrackerNames().size()));
 //			int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
 			int clusterSize = 2;
 			InputSplit[] result = new InputSplit[clusterSize];
@@ -115,6 +116,7 @@ public class SIMR {
 			String tmpStr = conf2.get("simr-tmpdir");
 			FileSystem fs = FileSystem.get(conf);
 
+
 			try {
 				fs.mkdirs(new Path(tmpStr));
 			} catch (Exception ex) {}
@@ -143,12 +145,6 @@ public class SIMR {
 
 		conf.set("simr-tmpdir", tmpPath.toString());
  		Job job = new Job(conf, "SIMR3");
-		for (CounterGroup cg : job.getCounters()) {
-		 for (Counter c : cg) {
-			 System.out.println("Counter: " + c.getName() + " = " + c.getValue());
-		 }
-		}
-		System.exit(0);
 
 		job.setNumReduceTasks(0);
 		job.setJarByClass(SIMR.class);
