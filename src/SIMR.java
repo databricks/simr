@@ -14,6 +14,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapred.ClusterStatus;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
@@ -23,6 +24,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.fs.*;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 
 
 public class SIMR {
@@ -151,7 +154,36 @@ public class SIMR {
 		}
 	}
 
-	static class DummyConf extends Configured {
+	static class DummyConf extends Configured implements Tool {
+		public int run(String[] args) throws Exception {
+			if (args.length == 0) {
+				System.out.println("Usage: writer <out-dir>");
+				ToolRunner.printGenericCommandUsage(System.out);
+				return -1;
+			}
+
+			Path outDir = new Path(args[0]);
+			JobConf job = new JobConf(getConf());
+
+			job.setJarByClass(DummyConf.class);
+			job.setJobName("random-writer");
+			org.apache.hadoop.mapred.FileOutputFormat.setOutputPath(job, outDir);
+
+			job.setOutputKeyClass(BytesWritable.class);
+			job.setOutputValueClass(BytesWritable.class);
+
+//			job.setInputFormat(DummyConf.class);
+//			job.setMapperClass(Map.class);
+			job.setReducerClass(IdentityReducer.class);
+			job.setOutputFormat(SequenceFileOutputFormat.class);
+
+			JobClient client = new JobClient(job);
+			ClusterStatus cluster = client.getClusterStatus();
+
+			System.out.println("System size = " + cluster.getTaskTrackers());
+
+			return 0;
+		}
 
 	}
 
@@ -163,24 +195,7 @@ public class SIMR {
 			System.exit(2);
 		}
 
-		DummyConf dummyJob = new DummyConf();
-		JobConf jc = new JobConf(dummyJob.getConf());
-
-		jc.setJarByClass(DummyConf.class);
-		jc.setJobName("random-writer");
-		org.apache.hadoop.mapred.FileOutputFormat.setOutputPath(jc, new Path("bla"));
-
-		jc.setOutputKeyClass(BytesWritable.class);
-		jc.setOutputValueClass(BytesWritable.class);
-
-//		jc.setInputFormat(FileInputFormat.class);
-//		jc.setMapperClass(Map.class);
-		jc.setReducerClass(IdentityReducer.class);
-		jc.setOutputFormat(SequenceFileOutputFormat.class);
-
-		JobClient jcl = new JobClient(jc);
-
-		System.out.println("System size = " + jcl.getClusterStatus().getTaskTrackers());
+		int res = ToolRunner.run(new Configuration(), new DummyConf(), args);
 
 		String outDir = otherArgs[0];
 
