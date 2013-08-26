@@ -138,8 +138,7 @@ public class SIMR {
 				}
 
 			}
-//			String p = context.getConfiguration().get("passing");
-//			context.write(new Text(p),new Text(""));
+			context.write(new Text(firstMapperIP),new Text(""));
 
 		}
 	}
