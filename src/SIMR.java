@@ -14,6 +14,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -29,6 +30,7 @@ public class SIMR {
 		 * set to the filename of the output file.
 		 */
 		public List<InputSplit> getSplits(JobContext context) throws IOException {
+
 			System.out.println((new JobClient().getClusterStatus().getActiveTrackerNames().size()));
 //			int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
 			int clusterSize = 2;
@@ -139,6 +141,10 @@ public class SIMR {
 			System.err.println("Usage: SIMR <out>");
 			System.exit(2);
 		}
+
+		JobConf jc = new JobConf();
+		System.out.println("sizish: " + new JobClient().getClusterStatus().getTaskTrackers());
+
 		String outDir = otherArgs[0];
 
 		Path tmpPath = new Path(outDir, "simr-meta");
