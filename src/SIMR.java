@@ -168,12 +168,12 @@ public class SIMR {
 
 		jc.setJarByClass(DummyConf.class);
 		jc.setJobName("random-writer");
-//		org.apache.hadoop.mapred.FileOutputFormat.setOutputPath(job, outDir);
+		org.apache.hadoop.mapred.FileOutputFormat.setOutputPath(jc, new Path("bla"));
 
 		jc.setOutputKeyClass(BytesWritable.class);
 		jc.setOutputValueClass(BytesWritable.class);
 
-//		jc.setInputFormat(RandomInputFormat.class);
+//		jc.setInputFormat(FileInputFormat.class);
 //		jc.setMapperClass(Map.class);
 		jc.setReducerClass(IdentityReducer.class);
 		jc.setOutputFormat(SequenceFileOutputFormat.class);
