@@ -155,33 +155,24 @@ public class SIMR {
 	}
 
 	static class DummyConf extends Configured implements Tool {
+
+		int clusterSize = -1;
+
+		synchronized void setClusterSize(int size) {
+			clusterSize = size;
+		}
+
+		synchronized int getClusterSize() {
+			return clusterSize;
+		}
+
 		public int run(String[] args) throws Exception {
-			if (args.length == 0) {
-				System.out.println("Usage: writer <out-dir>");
-				ToolRunner.printGenericCommandUsage(System.out);
-				return -1;
-			}
-
-			Path outDir = new Path(args[0]);
 			JobConf job = new JobConf(getConf());
-
-			job.setJarByClass(DummyConf.class);
-			job.setJobName("random-writer");
-			org.apache.hadoop.mapred.FileOutputFormat.setOutputPath(job, outDir);
-
-			job.setOutputKeyClass(BytesWritable.class);
-			job.setOutputValueClass(BytesWritable.class);
-
-//			job.setInputFormat(DummyConf.class);
-//			job.setMapperClass(Map.class);
-			job.setReducerClass(IdentityReducer.class);
-			job.setOutputFormat(SequenceFileOutputFormat.class);
 
 			JobClient client = new JobClient(job);
 			ClusterStatus cluster = client.getClusterStatus();
 
-			System.out.println("System size = " + cluster.getTaskTrackers());
-
+			setClusterSize(cluster.getTaskTrackers());
 			return 0;
 		}
 
@@ -195,7 +186,12 @@ public class SIMR {
 			System.exit(2);
 		}
 
-		int res = ToolRunner.run(new Configuration(), new DummyConf(), args);
+		DummyConf clusterSizeJob = new DummyConf();
+		int res = ToolRunner.run(new Configuration(), clusterSizeJob, args);
+
+		int clusterSize = clusterSizeJob.getClusterSize();
+
+		System.out.println("Actual size is now " + clusterSize);
 
 		String outDir = otherArgs[0];
 
