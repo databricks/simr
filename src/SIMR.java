@@ -34,27 +34,10 @@ public class SIMR {
 		 * set to the filename of the output file.
 		 */
 		public List<InputSplit> getSplits(JobContext context) throws IOException {
-			Configuration cf = context.getConfiguration();
-			Map<String,String> m = new TreeMap<String,String>();
-			for (Map.Entry<String, String> entry : cf) {
-				m.put(entry.getKey(), entry.getValue());
-			}
-			for(Map.Entry<String,String> entry : m.entrySet()) {
-				String key = entry.getKey();
-				String value = entry.getValue();
-
-				try {
-				if (Integer.parseInt(value) == 2)
-					System.out.println("**");
-				System.out.println(key + " => " + value);
-				if (Integer.parseInt(value) == 2)
-					System.out.println("**");
-				} catch (Exception ex) {}
-			}
-//			int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
-			int clusterSize = 1;
+			Configuration conf = context.getConfiguration();
+			int clusterSize = Integer.parseInt(conf.get("simr-cluster-size"));
 			InputSplit[] result = new InputSplit[clusterSize];
-//			Path outDir = org.apache.hadoop.mapred.FileOutputFormat.getOutputPath(job);
+
 			for(int i=0; i < result.length; ++i) {
 				result[i] = new FileSplit(new Path("dummy-split-" + i), 0, 1,
 						(String[])null);
@@ -165,11 +148,9 @@ public class SIMR {
 		}
 
 		public int run(String[] args) throws Exception {
-//			JobConf job = new JobConf(getConf());
-
-			JobClient client = new JobClient();
+			JobConf job = new JobConf(getConf());
+			JobClient client = new JobClient(job);
 			ClusterStatus cluster = client.getClusterStatus();
-
 			setClusterSize(cluster.getTaskTrackers());
 			return 0;
 		}
@@ -189,7 +170,9 @@ public class SIMR {
 
 		int clusterSize = clusterSizeJob.getClusterSize();
 
-		System.out.println("Actual size is now " + clusterSize);
+		System.err.println("Cluster size: " + clusterSize);
+
+		conf.set("simr-cluster-size", Integer.toString(clusterSize));
 
 		String outDir = otherArgs[0];
 
