@@ -17,8 +17,6 @@ import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.ClusterStatus;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.SequenceFileOutputFormat;
-import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -154,7 +152,7 @@ public class SIMR {
 		}
 	}
 
-	static class DummyConf extends Configured implements Tool {
+	static class ClusterSizeJob extends Configured implements Tool {
 
 		int clusterSize = -1;
 
@@ -167,9 +165,9 @@ public class SIMR {
 		}
 
 		public int run(String[] args) throws Exception {
-			JobConf job = new JobConf(getConf());
+//			JobConf job = new JobConf(getConf());
 
-			JobClient client = new JobClient(job);
+			JobClient client = new JobClient();
 			ClusterStatus cluster = client.getClusterStatus();
 
 			setClusterSize(cluster.getTaskTrackers());
@@ -186,7 +184,7 @@ public class SIMR {
 			System.exit(2);
 		}
 
-		DummyConf clusterSizeJob = new DummyConf();
+		ClusterSizeJob clusterSizeJob = new ClusterSizeJob();
 		int res = ToolRunner.run(new Configuration(), clusterSizeJob, args);
 
 		int clusterSize = clusterSizeJob.getClusterSize();
