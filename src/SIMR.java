@@ -84,28 +84,28 @@ public class SIMR {
 		}
 	}
 
-    public static String getLocalIP() {
-	String ip;
-	try {
-	    Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-	    while (interfaces.hasMoreElements()) {
-		NetworkInterface iface = interfaces.nextElement();
+	public static String getLocalIP() {
+		String ip;
+		try {
+			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+			while (interfaces.hasMoreElements()) {
+				NetworkInterface iface = interfaces.nextElement();
 
-		if (iface.isLoopback() || !iface.isUp())
-		    continue;
+				if (iface.isLoopback() || !iface.isUp())
+					continue;
 
-		Enumeration<InetAddress> addresses = iface.getInetAddresses();
-		while(addresses.hasMoreElements()) {
-		    InetAddress addr = addresses.nextElement();
-		    ip = addr.getHostAddress();
-		    return ip;
+				Enumeration<InetAddress> addresses = iface.getInetAddresses();
+				while(addresses.hasMoreElements()) {
+					InetAddress addr = addresses.nextElement();
+					ip = addr.getHostAddress();
+					return ip;
+				}
+			}
+		} catch (SocketException e) {
+			throw new RuntimeException(e);
 		}
-	    }
-	} catch (SocketException e) {
-	    throw new RuntimeException(e);
-	} 
-	return null;
-   }
+		return null;
+	}
 
 	public static class MyMapper
 			extends Mapper<Object, Text, Text, Text>{
@@ -128,7 +128,10 @@ public class SIMR {
 			FSDataOutputStream outf = fs.create(new Path(tmpStr + "/" + getLocalIP()), true);
 			outf.close();
 
-
+			for (FileStatus fstat : fs.listStatus(new Path(tmpStr + "/"))) {
+				context.write(new Text(fstat.getPath().getName()),
+						new Text(Long.toString(fstat.getModificationTime())));
+			}
 //			String p = context.getConfiguration().get("passing");
 //			context.write(new Text(p),new Text(""));
 
@@ -179,7 +182,7 @@ public class SIMR {
 		Path tmpPath = new Path(outDir, "simr-meta");
 
 		conf.set("simr-tmpdir", tmpPath.toString());
- 		Job job = new Job(conf, "SIMR3");
+		Job job = new Job(conf, "SIMR3");
 
 		job.setNumReduceTasks(0);
 		job.setJarByClass(SIMR.class);
