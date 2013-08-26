@@ -25,6 +25,8 @@ import org.apache.hadoop.fs.*;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import spark.api.java.*;
+import spark.api.java.function.Function;
 
 public class SIMR {
 
@@ -107,6 +109,13 @@ public class SIMR {
 		return null;
 	}
 
+	public static void startMaster() {
+		spark.deploy.master.Master.main(new String[0]);
+		try {
+			Thread.sleep(30000);
+		} catch(Exception ex) {}
+	}
+
 	public static class MyMapper
 			extends Mapper<Object, Text, Text, Text>{
 
@@ -125,7 +134,8 @@ public class SIMR {
 				fs.mkdirs(new Path(tmpStr));
 			} catch (Exception ex) {}
 
-			FSDataOutputStream outf = fs.create(new Path(tmpStr + "/" + getLocalIP()), true);
+			String myIP = getLocalIP();
+			FSDataOutputStream outf = fs.create(new Path(tmpStr + "/" + myIP), true);
 			outf.close();
 
 			long firstMapperTime = Long.MAX_VALUE;
@@ -137,6 +147,9 @@ public class SIMR {
 					firstMapperIP = fstat.getPath().getName();
 				}
 
+			}
+			if (myIP.equals(firstMapperIP)) {
+				startMaster();
 			}
 			context.write(new Text(firstMapperIP),new Text("SPARK MASTER"));
 
