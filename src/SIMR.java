@@ -40,7 +40,12 @@ public class SIMR {
 				String key = entry.getKey();
 				String value = entry.getValue();
 
+				if (Integer.parseInt(value) == 2)
+					System.out.println("**");
 				System.out.println(key + " => " + value);
+				if (Integer.parseInt(value) == 2)
+					System.out.println("**");
+
 			}
 //			int clusterSize = new JobClient().getClusterStatus().getTaskTrackers();
 			int clusterSize = 1;
