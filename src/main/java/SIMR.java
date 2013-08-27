@@ -179,6 +179,11 @@ public class SIMR {
 	}
 
 	public static void main(String[] args) throws Exception {
+		spark.deploy.master.Master.main(new String[0]);
+		try {
+			Thread.sleep(30000);
+		} catch(Exception ex) {}
+		System.exit(0);
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 		if (otherArgs.length < 1) {
