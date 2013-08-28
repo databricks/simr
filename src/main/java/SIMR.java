@@ -161,6 +161,9 @@ public class SIMR {
 
 			if (myIP.equals(firstMapperIP)) {
 				int mport = startMasterAndGetPort(firstMapperIP);
+				try {
+					Thread.sleep(3000);
+				} catch(Exception ex) {}
 				context.write(new Text(myIP),new Text("Starting Spark Master on port " + mport));
 
 				FSDataOutputStream portfile = fs.create(new Path(tmpStr + "/masterport"), true);
