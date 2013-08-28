@@ -201,9 +201,9 @@ public class SIMR {
 
 		conf.set("simr-tmpdir", tmpPath.toString());
 
-		conf.set("mapreduce.user.classpath.first", "yes");
+		conf.set("mapreduce.user.classpath.first", "true");
 
-		Job job = new Job(conf, "SIMR3");
+		Job job = new Job(conf, "SIMR4");
 
 		job.setNumReduceTasks(0);
 		job.setJarByClass(SIMR.class);
