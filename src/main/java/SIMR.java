@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.*;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import scala.Tuple2;
 import spark.api.java.*;
 import spark.api.java.function.Function;
 
@@ -109,10 +110,17 @@ public class SIMR {
 		return null;
 	}
 
-	public static void startMaster() {
-		spark.deploy.master.Master.main(new String[0]);
+	public static int startMasterAndGetPort(String masterIP) {
+
+		Tuple2 tuple2 = spark.deploy.master.Master.startSystemAndActor("localhost", 0, 8080);
+		int port = ((Integer) tuple2._2());
+		return port;
+	}
+
+	public static void startWorker(String masterIP, int masterPort) {
+		spark.deploy.worker.Worker.main(new String[]{"spark://" + masterIP + ":" + masterPort});
 		try {
-			Thread.sleep(90000);
+			Thread.sleep(180000);
 		} catch(Exception ex) {}
 	}
 
@@ -148,10 +156,39 @@ public class SIMR {
 				}
 
 			}
-			if (myIP.equals(firstMapperIP)) {
-				startMaster();
-			}
+
 			context.write(new Text(firstMapperIP),new Text("SPARK MASTER"));
+
+			if (myIP.equals(firstMapperIP)) {
+				int mport = startMasterAndGetPort(firstMapperIP);
+				context.write(new Text(myIP),new Text("Starting Spark Master on port " + mport));
+
+				FSDataOutputStream portfile = fs.create(new Path(tmpStr + "/masterport"), true);
+				portfile.write(mport);
+				portfile.close();
+				try {
+					Thread.sleep(180000);
+				} catch(Exception ex) {}
+			} else {
+				boolean gotMasterPort = false;
+				int mport = -1;
+				while (!gotMasterPort) {
+					FileStatus[] lsArr = fs.listStatus(new Path(tmpStr + "/masterport"));
+					if (lsArr.length != 0) {
+						gotMasterPort = true;
+						FSDataInputStream inPortFile =  fs.open(new Path(tmpStr + "/masterport"));
+						mport = inPortFile.readInt();
+						inPortFile.close();
+					} else  {
+						context.write(new Text(myIP),new Text("Sleeping"));
+						try {
+							Thread.sleep(500);
+						} catch(Exception ex) {}
+					}
+				}
+				context.write(new Text(myIP),new Text("Starting Spark Worker on port " + mport));
+				startWorker(firstMapperIP, mport);
+			}
 
 		}
 	}
