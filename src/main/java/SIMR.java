@@ -164,7 +164,7 @@ public class SIMR {
 				context.write(new Text(myIP),new Text("Starting Spark Master on port " + mport));
 
 				FSDataOutputStream portfile = fs.create(new Path(tmpStr + "/masterport"), true);
-				portfile.write(mport);
+				portfile.writeInt(mport);
 				portfile.close();
 				try {
 					Thread.sleep(180000);
