@@ -171,23 +171,27 @@ public class SIMR {
 				} catch(Exception ex) {}
 			} else {
 				boolean gotMasterPort = false;
+				int MAXTRIES = 3;
+				int tries = 0;
 				int mport = -1;
-				while (!gotMasterPort) {
+				while (!gotMasterPort && tries++ < MAXTRIES) {
 					FileStatus[] lsArr = fs.listStatus(new Path(tmpStr + "/masterport"));
-					if (lsArr.length != 0) {
+					if (lsArr.length != 0 && lsArr[0].getLen() > 0) {
 						gotMasterPort = true;
 						FSDataInputStream inPortFile =  fs.open(new Path(tmpStr + "/masterport"));
 						mport = inPortFile.readInt();
 						inPortFile.close();
 					} else  {
-						context.write(new Text(myIP),new Text("Sleeping"));
+						context.write(new Text(myIP),new Text("Sleeping...try " + tries));
 						try {
-							Thread.sleep(500);
+							Thread.sleep(4000);
 						} catch(Exception ex) {}
 					}
 				}
-				context.write(new Text(myIP),new Text("Starting Spark Worker on port " + mport));
-				startWorker(firstMapperIP, mport);
+				if (gotMasterPort) {
+					context.write(new Text(myIP),new Text("Starting Spark Worker on port " + mport));
+					startWorker(firstMapperIP, mport);
+				}
 			}
 
 		}
