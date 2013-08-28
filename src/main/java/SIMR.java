@@ -200,6 +200,9 @@ public class SIMR {
 		Path tmpPath = new Path(outDir, "simr-meta");
 
 		conf.set("simr-tmpdir", tmpPath.toString());
+
+		conf.set("mapreduce.user.classpath.first", "yes");
+
 		Job job = new Job(conf, "SIMR3");
 
 		job.setNumReduceTasks(0);
