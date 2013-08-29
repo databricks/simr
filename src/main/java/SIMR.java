@@ -170,7 +170,7 @@ public class SIMR {
 				portfile.writeInt(mport);
 				portfile.close();
 				try {
-					Thread.sleep(180000);
+					Thread.sleep(480000);
 				} catch(Exception ex) {}
 			} else {
 				boolean gotMasterPort = false;
