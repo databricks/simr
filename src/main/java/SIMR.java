@@ -111,8 +111,7 @@ public class SIMR {
 	}
 
 	public static int startMasterAndGetPort(String masterIP) {
-
-		Tuple2 tuple2 = spark.deploy.master.Master.startSystemAndActor("localhost", 0, 8080);
+		Tuple2 tuple2 = spark.deploy.master.Master.startSystemAndActor(masterIP, 0, 8080);
 		int port = ((Integer) tuple2._2());
 		return port;
 	}
