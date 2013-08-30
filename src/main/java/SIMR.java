@@ -258,6 +258,14 @@ public class SIMR {
 
 		FileOutputFormat.setOutputPath(job, new Path(outDir));
 
+		String files = conf.get("tmpfiles");
+		String libjars = conf.get("tmpjars");
+		String archives = conf.get("tmparchives");
+		System.out.println("files = " + files);
+		System.out.println("libjars = " + libjars);
+		System.out.println("archives = " + archives);
+
+
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 
