@@ -7,6 +7,7 @@
  */
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.net.*;
 
@@ -161,13 +162,29 @@ public class SIMR {
 			if (myIP.equals(firstMapperIP)) {
 				int mport = startMasterAndGetPort(firstMapperIP);
 				try {
-					Thread.sleep(3000);
+					Thread.sleep(2000);
 				} catch(Exception ex) {}
 				context.write(new Text(myIP),new Text("Starting Spark Master on port " + mport));
 
 				FSDataOutputStream portfile = fs.create(new Path(tmpStr + "/masterport"), true);
 				portfile.writeInt(mport);
 				portfile.close();
+
+				try {
+					Thread.sleep(5000);
+				} catch (Exception ex) {}
+
+				try {
+					URLClassLoader mainCL = new URLClassLoader(new URL[]{}, this.getClass().getClassLoader());
+					Class myClass = Class.forName("spark.examples.SparkPi", true, mainCL);
+					Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
+					//      Object instance = myClass.newInstance();
+					String[] args = new String[]{"local","10"};
+					Object result = method.invoke(null, new Object[]{args});
+				} catch (Exception ex) { System.out.println(ex); }
+
+
+
 				try {
 					Thread.sleep(480000);
 				} catch(Exception ex) {}
@@ -224,7 +241,7 @@ public class SIMR {
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
 
-		String[] args2 = new String[]{"-libjars","/root/perfecto.jar"};
+		String[] args2 = new String[]{"-libjars","/root/spark-examples_2.9.3-0.8.0-SNAPSHOT.jar"};
 
 		List <String> argList = new LinkedList<String>();
 		for (String arg : args2) { argList.add(arg); }
