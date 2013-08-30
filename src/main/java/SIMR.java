@@ -223,7 +223,8 @@ public class SIMR {
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
+		String[] args2 = new String[]{"-libjars","perfecto.jar"};
+		String[] otherArgs = new GenericOptionsParser(conf, args2).getRemainingArgs();
 		if (otherArgs.length < 1) {
 			System.err.println("Usage: SIMR <out>");
 			System.exit(2);
@@ -257,6 +258,9 @@ public class SIMR {
 		job.setInputFormatClass(RandomInputFormat.class);
 
 		FileOutputFormat.setOutputPath(job, new Path(outDir));
+
+		URLClassLoader urlCL = (URLClassLoader)conf.getClassLoader();
+
 
 		for (URL url : ((URLClassLoader)conf.getClassLoader()).getURLs()) {
 			System.out.println("cl ==> " + url.getFile() );
