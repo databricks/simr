@@ -267,7 +267,6 @@ public class SIMR {
 		System.out.println("files = " + files);
 		System.out.println("libjars = " + libjars);
 		System.out.println("archives = " + archives);
-		System.out.println(conf.getClassLoader().getResources());
 
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
