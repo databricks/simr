@@ -223,7 +223,7 @@ public class SIMR {
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		String[] args2 = new String[]{"-libjars","perfecto.jar"};
+		String[] args2 = new String[]{"-libjars","/root/perfecto.jar"};
 		String[] otherArgs = new GenericOptionsParser(conf, args2).getRemainingArgs();
 		if (otherArgs.length < 1) {
 			System.err.println("Usage: SIMR <out>");
