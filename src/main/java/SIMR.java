@@ -258,12 +258,16 @@ public class SIMR {
 
 		FileOutputFormat.setOutputPath(job, new Path(outDir));
 
+		for (URL url : ((URLClassLoader)conf.getClassLoader()).getURLs()) {
+			System.out.println("cl ==> " + url.getFile() );
+		}
 		String files = conf.get("tmpfiles");
 		String libjars = conf.get("tmpjars");
 		String archives = conf.get("tmparchives");
 		System.out.println("files = " + files);
 		System.out.println("libjars = " + libjars);
 		System.out.println("archives = " + archives);
+		System.out.println(conf.getClassLoader().getResources());
 
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
