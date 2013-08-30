@@ -226,9 +226,9 @@ public class SIMR {
 
 		String[] args2 = new String[]{"-libjars","/root/perfecto.jar"};
 
-		List <String> argList = Arrays.asList(args2);
-		List <String> orgList = Arrays.asList(args);
-		argList.addAll(orgList);
+		List <String> argList = new LinkedList<String>();
+		for (String arg : args2) { argList.add(arg); }
+		for (String arg : args) { argList.add(arg); }
 
 		String[] allArgs = argList.toArray(new String[]{});
 
