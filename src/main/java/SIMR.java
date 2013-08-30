@@ -223,8 +223,15 @@ public class SIMR {
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
+
 		String[] args2 = new String[]{"-libjars","/root/perfecto.jar"};
-		String[] otherArgs = new GenericOptionsParser(conf, args2).getRemainingArgs();
+
+		List <String> argList = Arrays.asList(args2);
+		argList.addAll(Arrays.asList(args));
+
+		String[] allArgs = argList.toArray(new String[]{});
+
+		String[] otherArgs = new GenericOptionsParser(conf, allArgs).getRemainingArgs();
 		if (otherArgs.length < 1) {
 			System.err.println("Usage: SIMR <out>");
 			System.exit(2);
