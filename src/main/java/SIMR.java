@@ -171,7 +171,7 @@ public class SIMR {
 				portfile.close();
 
 				try {
-					Thread.sleep(5000);
+					Thread.sleep(10000);
 				} catch (Exception ex) {}
 
 				try {
@@ -179,7 +179,7 @@ public class SIMR {
 					Class myClass = Class.forName("spark.examples.SparkPi", true, mainCL);
 					Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
 					//      Object instance = myClass.newInstance();
-					String[] args = new String[]{"local","10"};
+					String[] args = new String[]{"spark://" + firstMapperIP + ":" + mport,"10"};
 					Object result = method.invoke(null, new Object[]{args});
 				} catch (Exception ex) { System.out.println(ex); }
 
