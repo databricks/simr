@@ -179,8 +179,7 @@ public class SIMR {
 				String jar_file = conf.get("simr_jar_file");
 				String main_class = conf.get("simr_main_class");
 				String rest_args = conf.get("simr_rest_args");
-				rest_args.replaceAll("\\$master", master_url);
-				String[] program_args = rest_args.split(" ");
+				String[] program_args = rest_args.replaceAll("\\$master", master_url).split(" ");;
 
 				try {
 					URLClassLoader mainCL = new URLClassLoader(new URL[]{}, this.getClass().getClassLoader());
@@ -270,6 +269,15 @@ public class SIMR {
 		conf.set("simr_jar_file", jar_file);
 		conf.set("simr_main_class", main_class);
 		conf.set("simr_rest_args", rest_args);
+		System.out.println("before: " + rest_args);
+		System.out.println("inconf: " + conf.get("simr_rest_args"));
+
+		String rest_args2 = conf.get("simr_rest_args");
+		String[] program_args = rest_args2.replaceAll("\\$master", "spark://11.1.1.1:5151").split(" ");
+		for (String s : program_args) {
+			System.out.println("loop: " + s);
+		}
+
 //		rest_args.replaceAll("\$master", "bla")
 
 		String[] jarArgs = new String[]{"-libjars", jar_file};
