@@ -179,7 +179,13 @@ public class SIMR {
 				String jar_file = conf.get("simr_jar_file");
 				String main_class = conf.get("simr_main_class");
 				String rest_args = conf.get("simr_rest_args");
-				String[] program_args = rest_args.replaceAll("\\%master\\%", master_url).split(" ");;
+
+				String[] program_args = rest_args.replaceAll("\\%master\\%", master_url).split(" ");
+				int tmpx = 0;
+				for (String s : program_args) {
+					System.out.println(tmpx + " : " + s);
+					tmpx++;
+				}
 
 				try {
 					URLClassLoader mainCL = new URLClassLoader(new URL[]{}, this.getClass().getClassLoader());
