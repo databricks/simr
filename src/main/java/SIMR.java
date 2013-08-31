@@ -252,6 +252,12 @@ public class SIMR {
 			System.exit(2);
 		}
 
+		int xx = 0;
+		for (String s : args) {
+			System.out.println(xx + " : " + s);
+			xx++;
+		}
+
 		String out_dir = args[0];
 		String jar_file = args[1];
 		String main_class = args[2];
