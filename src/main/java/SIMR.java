@@ -180,10 +180,12 @@ public class SIMR {
 				String main_class = conf.get("simr_main_class");
 				String rest_args = conf.get("simr_rest_args");
 
+				System.err.println("rest_args from conf: " + rest_args);
+
 				String[] program_args = rest_args.replaceAll("\\%master\\%", master_url).split(" ");
 				int tmpx = 0;
 				for (String s : program_args) {
-					System.out.println(tmpx + " : " + s);
+					System.err.println(tmpx + " : " + s);
 					tmpx++;
 				}
 
