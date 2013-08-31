@@ -264,6 +264,8 @@ public class SIMR {
 		String rest_args = "";
 		for (int x = 3; x < args.length; x++) {
 			rest_args += args[x];
+			if (x < args.length-1)
+				rest_args += " ";
 		}
 
 		Configuration conf = new Configuration();
