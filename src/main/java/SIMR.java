@@ -134,7 +134,7 @@ public class SIMR {
 		) throws IOException, InterruptedException {
 			Configuration conf = new Configuration();
 			Configuration conf2 = context.getConfiguration();
-			String tmpStr = conf2.get("simr_out_dir");
+			String tmpStr = conf2.get("simr_tmp_dir");
 			FileSystem fs = FileSystem.get(conf);
 
 
@@ -263,6 +263,9 @@ public class SIMR {
 
 		Configuration conf = new Configuration();
 
+		Path tmpPath = new Path(out_dir, "simr-meta");
+
+		conf.set("simr_tmp_dir", tmpPath.toString());
 		conf.set("simr_out_dir", out_dir);
 		conf.set("simr_jar_file", jar_file);
 		conf.set("simr_main_class", main_class);
