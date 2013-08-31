@@ -134,7 +134,7 @@ public class SIMR {
 		) throws IOException, InterruptedException {
 			Configuration conf = new Configuration();
 			Configuration conf2 = context.getConfiguration();
-			String tmpStr = conf2.get("simr-tmpdir");
+			String tmpStr = conf2.get("simr_out_dir");
 			FileSystem fs = FileSystem.get(conf);
 
 
@@ -174,13 +174,20 @@ public class SIMR {
 					Thread.sleep(10000);
 				} catch (Exception ex) {}
 
+				String master_url = "spark://" + firstMapperIP + ":" + mport;
+				String out_dir = conf.get("simr_out_dir");
+				String jar_file = conf.get("simr_jar_file");
+				String main_class = conf.get("simr_main_class");
+				String rest_args = conf.get("simr_rest_args");
+				rest_args.replaceAll("\\$master", master_url);
+				String[] program_args = rest_args.split(" ");
+
 				try {
 					URLClassLoader mainCL = new URLClassLoader(new URL[]{}, this.getClass().getClassLoader());
-					Class myClass = Class.forName("spark.examples.SparkPi", true, mainCL);
+					Class myClass = Class.forName(main_class, true, mainCL);
 					Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
 					//      Object instance = myClass.newInstance();
-					String[] args = new String[]{"spark://" + firstMapperIP + ":" + mport,"10"};
-					Object result = method.invoke(null, new Object[]{args});
+					Object result = method.invoke(null, new Object[]{program_args});
 				} catch (Exception ex) { System.out.println(ex); }
 
 
@@ -239,40 +246,43 @@ public class SIMR {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Configuration conf = new Configuration();
-
-		String[] args2 = new String[]{"-libjars","/root/spark-examples_2.9.3-0.8.0-SNAPSHOT.jar"};
-
-		List <String> argList = new LinkedList<String>();
-		for (String arg : args2) { argList.add(arg); }
-		for (String arg : args) { argList.add(arg); }
-
-		String[] allArgs = argList.toArray(new String[]{});
-
-		String[] otherArgs = new GenericOptionsParser(conf, allArgs).getRemainingArgs();
-		if (otherArgs.length < 1) {
-			System.err.println("Usage: SIMR <out>");
+		if (args.length < 4) {
+			System.err.println("Usage: SIMR <out_dir> <your_jar_file> <main_class> <your_params>");
+			System.err.println("\n<your_params> will be passed to your <main_class>");
+			System.err.println("The string $master will be replaced with the SPARK master URL");
 			System.exit(2);
 		}
 
+		String out_dir = args[0];
+		String jar_file = args[1];
+		String main_class = args[2];
+		String rest_args = "";
+		for (int x = 3; x < args.length; x++) {
+			rest_args += args[x];
+		}
+
+		Configuration conf = new Configuration();
+
+		conf.set("simr_out_dir", out_dir);
+		conf.set("simr_jar_file", jar_file);
+		conf.set("simr_main_class", main_class);
+		conf.set("simr_rest_args", rest_args);
+//		rest_args.replaceAll("\$master", "bla")
+
+		String[] jarArgs = new String[]{"-libjars", jar_file};
+
+		String[] otherArgs = new GenericOptionsParser(conf, jarArgs).getRemainingArgs();
+
 		ClusterSizeJob clusterSizeJob = new ClusterSizeJob();
-		int res = ToolRunner.run(new Configuration(), clusterSizeJob, args);
+		ToolRunner.run(new Configuration(), clusterSizeJob, args);
 
 		int clusterSize = clusterSizeJob.getClusterSize();
-
 		System.err.println("Cluster size: " + clusterSize);
-
 		conf.set("simr-cluster-size", Integer.toString(clusterSize));
-
-		String outDir = otherArgs[0];
-
-		Path tmpPath = new Path(outDir, "simr-meta");
-
-		conf.set("simr-tmpdir", tmpPath.toString());
 
 		conf.set("mapreduce.user.classpath.first", "true");
 
-		Job job = new Job(conf, "SIMR4");
+		Job job = new Job(conf, "SIMR5");
 
 		job.setNumReduceTasks(0);
 		job.setJarByClass(SIMR.class);
@@ -282,20 +292,20 @@ public class SIMR {
 		job.setOutputValueClass(Text.class);
 		job.setInputFormatClass(RandomInputFormat.class);
 
-		FileOutputFormat.setOutputPath(job, new Path(outDir));
+		FileOutputFormat.setOutputPath(job, new Path(out_dir));
 
-		URLClassLoader urlCL = (URLClassLoader)conf.getClassLoader();
-
-
-		for (URL url : ((URLClassLoader)conf.getClassLoader()).getURLs()) {
-			System.out.println("cl ==> " + url.getFile() );
-		}
-		String files = conf.get("tmpfiles");
-		String libjars = conf.get("tmpjars");
-		String archives = conf.get("tmparchives");
-		System.out.println("files = " + files);
-		System.out.println("libjars = " + libjars);
-		System.out.println("archives = " + archives);
+//		URLClassLoader urlCL = (URLClassLoader)conf.getClassLoader();
+//
+//
+//		for (URL url : ((URLClassLoader)conf.getClassLoader()).getURLs()) {
+//			System.out.println("cl ==> " + url.getFile() );
+//		}
+//		String files = conf.get("tmpfiles");
+//		String libjars = conf.get("tmpjars");
+//		String archives = conf.get("tmparchives");
+//		System.out.println("files = " + files);
+//		System.out.println("libjars = " + libjars);
+//		System.out.println("archives = " + archives);
 
 
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
