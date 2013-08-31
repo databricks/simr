@@ -179,7 +179,7 @@ public class SIMR {
 				String jar_file = conf.get("simr_jar_file");
 				String main_class = conf.get("simr_main_class");
 				String rest_args = conf.get("simr_rest_args");
-				String[] program_args = rest_args.replaceAll("\\$master", master_url).split(" ");;
+				String[] program_args = rest_args.replaceAll("\\%master\\%", master_url).split(" ");;
 
 				try {
 					URLClassLoader mainCL = new URLClassLoader(new URL[]{}, this.getClass().getClassLoader());
@@ -248,7 +248,7 @@ public class SIMR {
 		if (args.length < 4) {
 			System.err.println("Usage: SIMR <out_dir> <your_jar_file> <main_class> <your_params>");
 			System.err.println("\n<your_params> will be passed to your <main_class>");
-			System.err.println("The string $master will be replaced with the SPARK master URL");
+			System.err.println("The string %master% will be replaced with the SPARK master URL");
 			System.exit(2);
 		}
 
@@ -279,7 +279,7 @@ public class SIMR {
 		System.out.println("inconf: " + conf.get("simr_rest_args"));
 
 		String rest_args2 = conf.get("simr_rest_args");
-		String[] program_args = rest_args2.replaceAll("\\$master", "spark://11.1.1.1:5151").split(" ");
+		String[] program_args = rest_args2.replaceAll("\\%master\\%", "spark://11.1.1.1:5151").split(" ");
 		for (String s : program_args) {
 			System.out.println("loop: " + s);
 		}
