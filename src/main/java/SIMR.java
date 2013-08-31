@@ -132,9 +132,8 @@ public class SIMR {
 
 		public void map(Object key, Text value, Context context
 		) throws IOException, InterruptedException {
-			Configuration conf = new Configuration();
-			Configuration conf2 = context.getConfiguration();
-			String tmpStr = conf2.get("simr_tmp_dir");
+			Configuration conf = context.getConfiguration();
+			String tmpStr = conf.get("simr_tmp_dir");
 			FileSystem fs = FileSystem.get(conf);
 
 
