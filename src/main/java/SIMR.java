@@ -170,7 +170,7 @@ public class SIMR {
 				portfile.close();
 
 				try {
-					Thread.sleep(10000);
+					Thread.sleep(180000);
 				} catch (Exception ex) {}
 
 				String master_url = "spark://" + firstMapperIP + ":" + mport;
