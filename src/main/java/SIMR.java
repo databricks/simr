@@ -26,9 +26,9 @@ import org.apache.hadoop.fs.*;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import scala.Tuple2;
-import spark.api.java.*;
-import spark.api.java.function.Function;
+import scala.Tuple3;
+import org.apache.spark.api.java.*;
+import org.apache.spark.api.java.function.Function;
 
 public class SIMR {
 
@@ -112,13 +112,13 @@ public class SIMR {
 	}
 
 	public static int startMasterAndGetPort(String masterIP) {
-		Tuple2 tuple2 = spark.deploy.master.Master.startSystemAndActor(masterIP, 0, 8080);
-		int port = ((Integer) tuple2._2());
+		Tuple3 tuple3 = org.apache.spark.deploy.master.Master.startSystemAndActor(masterIP, 0, 8080);
+		int port = ((Integer) tuple3._2());
 		return port;
 	}
 
 	public static void startWorker(String masterIP, int masterPort) {
-		spark.deploy.worker.Worker.main(new String[]{"spark://" + masterIP + ":" + masterPort});
+		org.apache.spark.deploy.worker.Worker.main(new String[]{"spark://" + masterIP + ":" + masterPort});
 		try {
 			Thread.sleep(180000);
 		} catch(Exception ex) {}
@@ -307,6 +307,7 @@ public class SIMR {
 		conf.set("simr-cluster-size", Integer.toString(clusterSize));
 
 		conf.set("mapreduce.user.classpath.first", "true");
+		conf.set("mapred.map.tasks.speculative.execution", "false");
 
 		Job job = new Job(conf, "SIMR5");
 
