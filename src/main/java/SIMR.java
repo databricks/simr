@@ -159,22 +159,23 @@ public class SIMR {
 			context.write(new Text(firstMapperIP),new Text("SPARK MASTER"));
 
 			if (myIP.equals(firstMapperIP)) {
-				int mport = startMasterAndGetPort(firstMapperIP);
-				try {
-					Thread.sleep(2000);
-				} catch(Exception ex) {}
-				context.write(new Text(myIP),new Text("Starting Spark Master on port " + mport));
-
-				FSDataOutputStream portfile = fs.create(new Path(tmpStr + "/masterport"), true);
-				portfile.writeInt(mport);
-				portfile.close();
+//				int mport = startMasterAndGetPort(firstMapperIP);
+//				try {
+//					Thread.sleep(2000);
+//				} catch(Exception ex) {}
+//				context.write(new Text(myIP),new Text("Starting Spark Master on port " + mport));
+//
+//				FSDataOutputStream portfile = fs.create(new Path(tmpStr + "/masterport"), true);
+//				portfile.writeInt(mport);
+//				portfile.close();
 
 				try {
 					Thread.sleep(180000);
 				} catch (Exception ex) {}
 
-				String master_url = "spark://" + firstMapperIP + ":" + mport;
+//				String master_url = "spark://" + firstMapperIP + ":" + mport;
 				String out_dir = conf.get("simr_out_dir");
+				String master_url = "simr://" + out_dir;
 				String jar_file = conf.get("simr_jar_file");
 				String main_class = conf.get("simr_main_class");
 				String rest_args = conf.get("simr_rest_args");
