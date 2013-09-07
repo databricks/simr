@@ -169,9 +169,9 @@ public class SIMR {
 //				portfile.writeInt(mport);
 //				portfile.close();
 
-				try {
-					Thread.sleep(180000);
-				} catch (Exception ex) {}
+//				try {
+//					Thread.sleep(180000);
+//				} catch (Exception ex) {}
 
 //				String master_url = "spark://" + firstMapperIP + ":" + mport;
 				String out_dir = conf.get("simr_out_dir");
