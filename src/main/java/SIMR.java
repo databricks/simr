@@ -165,9 +165,7 @@ public class SIMR {
 
 			if (myIP.equals(firstMapperIP)) {
 
-				String out_dir = conf.get("simr_out_dir");
-				String master_url = "simr://" + out_dir + "/" + simrDirName + "/" + DRIVERURL;
-				String jar_file = conf.get("simr_jar_file");
+				String master_url = "simr://" + simrDirName + "/" + DRIVERURL;
 				String main_class = conf.get("simr_main_class");
 				String rest_args = conf.get("simr_rest_args");
 
@@ -195,11 +193,11 @@ public class SIMR {
 				} catch(Exception ex) {}
 			} else {
 				boolean gotDriverUrl = false;
-				int MAXTRIES = 3;
+				int MAXTRIES = 10;
 				int tries = 0;
 				String mUrl = "";
 				while (!gotDriverUrl && tries++ < MAXTRIES) {
-					FileStatus[] lsArr = fs.listStatus(new Path(simrDirName + "/" + DRIVERURL));
+					FileStatus [] lsArr = fs.listStatus(new Path(simrDirName + "/" + DRIVERURL));
 					if (lsArr.length != 0 && lsArr[0].getLen() > 0) {
 						gotDriverUrl = true;
 						FSDataInputStream inPortFile =  fs.open(new Path(simrDirName + "/" + DRIVERURL));
