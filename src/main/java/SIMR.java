@@ -33,6 +33,8 @@ import scala.Tuple3;
 public class SIMR {
 
 	private static final String SIMRTMPDIR = "simr-meta";
+	private static final String ELECTIONDIR = "election";
+	private static final String DRIVERURL = "driverurl";
 
 	static class RandomInputFormat extends InputFormat<Text, Text> {
 		/**
@@ -131,27 +133,26 @@ public class SIMR {
 	public static class MyMapper
 			extends Mapper<Object, Text, Text, Text>{
 
-		private final static IntWritable one = new IntWritable(1);
-		private Text word = new Text();
-
 		public void map(Object key, Text value, Context context
 		) throws IOException, InterruptedException {
+
 			Configuration conf = context.getConfiguration();
-			String tmpStr = conf.get("simr_tmp_dir");
 			FileSystem fs = FileSystem.get(conf);
 
+			String simrDirName = conf.get("simr_tmp_dir");
+			String electionDirName = simrDirName + "/" + ELECTIONDIR;
 
 			try {
-				fs.mkdirs(new Path(tmpStr));
+				fs.mkdirs(new Path(electionDirName));
 			} catch (Exception ex) {}
 
 			String myIP = getLocalIP();
-			FSDataOutputStream outf = fs.create(new Path(tmpStr + "/" + myIP), true);
+			FSDataOutputStream outf = fs.create(new Path(electionDirName + "/" + myIP), true);
 			outf.close();
 
 			long firstMapperTime = Long.MAX_VALUE;
 			String firstMapperIP = "";
-			for (FileStatus fstat : fs.listStatus(new Path(tmpStr + "/"))) {
+			for (FileStatus fstat : fs.listStatus(new Path(electionDirName + "/"))) {
 				long modTime = fstat.getModificationTime();
 				if (modTime < firstMapperTime) {
 					firstMapperTime = modTime;
@@ -165,7 +166,7 @@ public class SIMR {
 			if (myIP.equals(firstMapperIP)) {
 
 				String out_dir = conf.get("simr_out_dir");
-				String master_url = "simr://" + out_dir;
+				String master_url = "simr://" + out_dir + "/" + simrDirName + "/" + DRIVERURL;
 				String jar_file = conf.get("simr_jar_file");
 				String main_class = conf.get("simr_main_class");
 				String rest_args = conf.get("simr_rest_args");
@@ -198,10 +199,10 @@ public class SIMR {
 				int tries = 0;
 				String mUrl = "";
 				while (!gotDriverUrl && tries++ < MAXTRIES) {
-					FileStatus[] lsArr = fs.listStatus(new Path(tmpStr + "/driverurl"));
+					FileStatus[] lsArr = fs.listStatus(new Path(simrDirName + "/" + DRIVERURL));
 					if (lsArr.length != 0 && lsArr[0].getLen() > 0) {
 						gotDriverUrl = true;
-						FSDataInputStream inPortFile =  fs.open(new Path(tmpStr + "/driverurl"));
+						FSDataInputStream inPortFile =  fs.open(new Path(simrDirName + "/" + DRIVERURL));
 						mUrl = inPortFile.readUTF();
 						inPortFile.close();
 					} else  {
@@ -315,7 +316,7 @@ public class SIMR {
 			}
 		}
 
-		System.err.println("Setting up a cluseter of size (simr_cluster_size): " + clusterSize);
+		System.err.println("Setting up a cluster of size (simr_cluster_size): " + clusterSize);
 
 		conf.set("simr_cluster_size", Integer.toString(clusterSize));
 
