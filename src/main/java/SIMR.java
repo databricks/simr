@@ -6,6 +6,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -27,10 +28,11 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import scala.Tuple3;
-import org.apache.spark.api.java.*;
-import org.apache.spark.api.java.function.Function;
+
 
 public class SIMR {
+
+	private static final String SIMRTMPDIR = "simr-meta";
 
 	static class RandomInputFormat extends InputFormat<Text, Text> {
 		/**
@@ -39,7 +41,7 @@ public class SIMR {
 		 */
 		public List<InputSplit> getSplits(JobContext context) throws IOException {
 			Configuration conf = context.getConfiguration();
-			int clusterSize = Integer.parseInt(conf.get("simr-cluster-size"));
+			int clusterSize = Integer.parseInt(conf.get("simr_cluster_size"));
 			InputSplit[] result = new InputSplit[clusterSize];
 
 			for(int i=0; i < result.length; ++i) {
@@ -161,21 +163,7 @@ public class SIMR {
 			context.write(new Text(firstMapperIP),new Text("SPARK MASTER"));
 
 			if (myIP.equals(firstMapperIP)) {
-//				int mport = startMasterAndGetPort(firstMapperIP);
-//				try {
-//					Thread.sleep(2000);
-//				} catch(Exception ex) {}
-//				context.write(new Text(myIP),new Text("Starting Spark Master on port " + mport));
-//
-//				FSDataOutputStream portfile = fs.create(new Path(tmpStr + "/masterport"), true);
-//				portfile.writeInt(mport);
-//				portfile.close();
 
-//				try {
-//					Thread.sleep(180000);
-//				} catch (Exception ex) {}
-
-//				String master_url = "spark://" + firstMapperIP + ":" + mport;
 				String out_dir = conf.get("simr_out_dir");
 				String master_url = "simr://" + out_dir;
 				String jar_file = conf.get("simr_jar_file");
@@ -254,67 +242,91 @@ public class SIMR {
 
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void checkParams(String[] args) {
+		String jar_file = args[1];
+		String main_class = args[2];
+
 		if (args.length < 4) {
 			System.err.println("Usage: SIMR <out_dir> <your_jar_file> <main_class> <your_params>");
 			System.err.println("\n<your_params> will be passed to your <main_class>");
 			System.err.println("The string %master% will be replaced with the SPARK master URL");
+			System.exit(1);
+		}
+
+		File file = new File(jar_file);
+		if (!file.exists()) {
+			System.err.println("SIMR ERROR: Coudln't find specified jar file (" + jar_file + ")");
+			System.exit(1);
+		}
+
+		try {
+			Class.forName(main_class);
+		} catch(ClassNotFoundException ex) {
+			System.err.println("SIMR ERROR: Couldn't find specified class (" + main_class + ")");
 			System.exit(2);
 		}
 
-		int xx = 0;
-		for (String s : args) {
-			System.out.println(xx + " : " + s);
-			xx++;
+		try {
+			URLClassLoader mainCL = new URLClassLoader(new URL[]{});
+			Class myClass = Class.forName(main_class, true, mainCL);
+			myClass.getDeclaredMethod("main", new Class[]{String[].class});
+		} catch (Exception ex) {
+			System.err.println("SIMR ERROR: Specified class doesn't have an accessible static main method");
+			System.exit(2);
 		}
 
+	}
+
+	public static void updateConfig(Configuration conf, String[] args) {
 		String out_dir = args[0];
 		String jar_file = args[1];
 		String main_class = args[2];
-		String rest_args = "";
+
+		String rest_args = ""; // all of the rest of the args joined together
 		for (int x = 3; x < args.length; x++) {
 			rest_args += args[x];
 			if (x < args.length-1)
 				rest_args += " ";
 		}
 
-		Configuration conf = new Configuration();
-
-		Path tmpPath = new Path(out_dir, "simr-meta");
-
+		Path tmpPath = new Path(out_dir, SIMRTMPDIR);
 		conf.set("simr_tmp_dir", tmpPath.toString());
 		conf.set("simr_out_dir", out_dir);
 		conf.set("simr_jar_file", jar_file);
 		conf.set("simr_main_class", main_class);
 		conf.set("simr_rest_args", rest_args);
-		System.out.println("before: " + rest_args);
-		System.out.println("inconf: " + conf.get("simr_rest_args"));
 
-		String rest_args2 = conf.get("simr_rest_args");
-		String[] program_args = rest_args2.replaceAll("\\%master\\%", "spark://11.1.1.1:5151").split(" ");
-		for (String s : program_args) {
-			System.out.println("loop: " + s);
+		int clusterSize = -1;
+
+		if (conf.get("simr_cluster_size") != null) {
+			clusterSize = Integer.parseInt(conf.get("simr_cluster_size"));
+		} else {
+			try {
+				ClusterSizeJob clusterSizeJob = new ClusterSizeJob();
+				ToolRunner.run(new Configuration(), clusterSizeJob, args);
+				clusterSize = clusterSizeJob.getClusterSize();
+			} catch (Exception ex) {
+				System.err.println("Coudln't find out cluster size.\n\n");
+				ex.printStackTrace();
+			}
 		}
 
-//		rest_args.replaceAll("\$master", "bla")
+		System.err.println("Setting up a cluseter of size (simr_cluster_size): " + clusterSize);
 
-		String[] jarArgs = new String[]{"-libjars", jar_file};
+		conf.set("simr_cluster_size", Integer.toString(clusterSize));
 
+		conf.set("mapreduce.user.classpath.first", "true"); // important: ensure hadoop jars come last
+		conf.set("mapred.map.tasks.speculative.execution", "false");
+	}
+
+	public static Job setupJob(Configuration conf) throws Exception {
+		String[] jarArgs = new String[]{"-libjars", conf.get("simr_jar_file")}; // hadoop ships jars
 		String[] otherArgs = new GenericOptionsParser(conf, jarArgs).getRemainingArgs();
 
-		ClusterSizeJob clusterSizeJob = new ClusterSizeJob();
-		ToolRunner.run(new Configuration(), clusterSizeJob, args);
 
-		int clusterSize = clusterSizeJob.getClusterSize();
-		System.err.println("Cluster size: " + clusterSize);
-		conf.set("simr-cluster-size", Integer.toString(clusterSize));
+		Job job = new Job(conf, "Spark In MapReduce (Simr)");
 
-		conf.set("mapreduce.user.classpath.first", "true");
-		conf.set("mapred.map.tasks.speculative.execution", "false");
-
-		Job job = new Job(conf, "SIMR5");
-
-		job.setNumReduceTasks(0);
+		job.setNumReduceTasks(0);  // no reducers needed
 		job.setJarByClass(SIMR.class);
 		job.setMapperClass(MyMapper.class);
 
@@ -322,23 +334,20 @@ public class SIMR {
 		job.setOutputValueClass(Text.class);
 		job.setInputFormatClass(RandomInputFormat.class);
 
-		FileOutputFormat.setOutputPath(job, new Path(out_dir));
+		FileOutputFormat.setOutputPath(job, new Path(conf.get("simr_out_dir")));
+		return job;
+	}
 
-//		URLClassLoader urlCL = (URLClassLoader)conf.getClassLoader();
-//
-//
-//		for (URL url : ((URLClassLoader)conf.getClassLoader()).getURLs()) {
-//			System.out.println("cl ==> " + url.getFile() );
-//		}
-//		String files = conf.get("tmpfiles");
-//		String libjars = conf.get("tmpjars");
-//		String archives = conf.get("tmparchives");
-//		System.out.println("files = " + files);
-//		System.out.println("libjars = " + libjars);
-//		System.out.println("archives = " + archives);
+	public static void main(String[] args) throws Exception {
+		checkParams(args);
 
+		Configuration conf = new Configuration();
 
-		System.exit(job.waitForCompletion(true) ? 0 : 1);
+		updateConfig(conf, args);
+
+		Job job = setupJob(conf);
+
+		System.exit(job.waitForCompletion(true) ? 0 : 1); // block until job finishes
 	}
 
 }
