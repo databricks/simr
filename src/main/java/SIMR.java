@@ -261,7 +261,8 @@ public class SIMR {
 
 		Class myClass = null;
 		try {
-			URLClassLoader mainCL = new URLClassLoader(new URL[]{new URL(jar_file)});
+			URL jarUrl = new File(jar_file).toURI().toURL();
+			URLClassLoader mainCL = new URLClassLoader(new URL[]{jarUrl});
 			myClass = Class.forName(main_class, true, mainCL);
 		} catch(ClassNotFoundException ex) {
 			System.err.println("SIMR ERROR: Couldn't find specified class (" + main_class + ")");
