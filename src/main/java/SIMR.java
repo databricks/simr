@@ -259,16 +259,19 @@ public class SIMR {
 			System.exit(1);
 		}
 
+		Class myClass = null;
 		try {
-			Class.forName(main_class);
+			URLClassLoader mainCL = new URLClassLoader(new URL[]{new URL(jar_file)});
+			myClass = Class.forName(main_class, true, mainCL);
 		} catch(ClassNotFoundException ex) {
 			System.err.println("SIMR ERROR: Couldn't find specified class (" + main_class + ")");
+			System.exit(2);
+		} catch(Exception ex) {
+			ex.printStackTrace();
 			System.exit(2);
 		}
 
 		try {
-			URLClassLoader mainCL = new URLClassLoader(new URL[]{});
-			Class myClass = Class.forName(main_class, true, mainCL);
 			myClass.getDeclaredMethod("main", new Class[]{String[].class});
 		} catch (Exception ex) {
 			System.err.println("SIMR ERROR: Specified class doesn't have an accessible static main method");
