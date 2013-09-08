@@ -196,11 +196,13 @@ public class SIMR {
 				int MAXTRIES = 10;
 				int tries = 0;
 				String mUrl = "";
+				Path driverFile = new Path(simrDirName + "/" + DRIVERURL);
+				System.err.println("Looking for file: " + driverFile);
 				while (!gotDriverUrl && tries++ < MAXTRIES) {
-					FileStatus [] lsArr = fs.listStatus(new Path(simrDirName + "/" + DRIVERURL));
+					FileStatus [] lsArr = fs.listStatus(driverFile);
 					if (lsArr.length != 0 && lsArr[0].getLen() > 0) {
 						gotDriverUrl = true;
-						FSDataInputStream inPortFile =  fs.open(new Path(simrDirName + "/" + DRIVERURL));
+						FSDataInputStream inPortFile =  fs.open(driverFile);
 						mUrl = inPortFile.readUTF();
 						inPortFile.close();
 					} else  {
