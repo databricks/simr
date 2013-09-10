@@ -4,10 +4,10 @@ assemblySettings
 
 organization := "spark"
 
-name := "org.apache.spark.simr.SIMR"
+name := "simr.Simr"
 
 version := "1.0-SNAPSHOT"
 
 scalaVersion := "2.9.3"
 
-mainClass in assembly := Some("org.apache.spark.simr.SIMR")
+mainClass in assembly := Some("simr.Simr")

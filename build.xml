@@ -1,6 +1,6 @@
 <project name="simr" default="dist" basedir=".">
     <description>
-        org.apache.spark.simr.SIMR build file
+        simr.Simr build file
     </description>
     <!-- set global properties for this build -->
     <property name="src" location="src"/>

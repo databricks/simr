@@ -1,4 +1,4 @@
-package org.apache.spark.simr;
+package simr;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +20,6 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-
 
 class RandomInputFormat extends InputFormat<Text, Text> {
 	/**
@@ -77,9 +76,9 @@ class RandomInputFormat extends InputFormat<Text, Text> {
 	}
 }
 
-public class SIMR {
+public class Simr {
 
-	private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SIMR
+	private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for Simr
 	private static final String ELECTIONDIR = "election"; // Directory used to do master election
 	private static final String DRIVERURL = "driverurl";  // File used to store Spark driver URL
 
@@ -256,7 +255,7 @@ public class SIMR {
 		String main_class = args[2];
 
 		if (args.length < 4) {
-			System.err.println("Usage: org.apache.spark.simr.SIMR <out_dir> <your_jar_file> <main_class> <your_params>");
+			System.err.println("Usage: simr.Simr <out_dir> <your_jar_file> <main_class> <your_params>");
 			System.err.println("\n<your_params> will be passed to your <main_class>");
 			System.err.println("The string %master% will be replaced with the SPARK master URL");
 			System.exit(1);
@@ -264,7 +263,7 @@ public class SIMR {
 
 		File file = new File(jar_file);
 		if (!file.exists()) {
-			System.err.println("org.apache.spark.simr.SIMR ERROR: Coudln't find specified jar file (" + jar_file + ")");
+			System.err.println("simr.Simr ERROR: Coudln't find specified jar file (" + jar_file + ")");
 			System.exit(1);
 		}
 
@@ -274,7 +273,7 @@ public class SIMR {
 			URLClassLoader mainCL = new URLClassLoader(new URL[]{jarUrl});
 			myClass = Class.forName(main_class, true, mainCL);
 		} catch(ClassNotFoundException ex) {
-			System.err.println("org.apache.spark.simr.SIMR ERROR: Couldn't find specified class (" + main_class + ")");
+			System.err.println("simr.Simr ERROR: Couldn't find specified class (" + main_class + ")");
 			System.exit(2);
 		} catch(Exception ex) {
 			ex.printStackTrace();
@@ -284,7 +283,7 @@ public class SIMR {
 		try {
 			myClass.getDeclaredMethod("main", new Class[]{String[].class});
 		} catch (Exception ex) {
-			System.err.println("org.apache.spark.simr.SIMR ERROR: Specified class doesn't have an accessible static main method");
+			System.err.println("simr.Simr ERROR: Specified class doesn't have an accessible static main method");
 			System.exit(2);
 		}
 
@@ -340,7 +339,7 @@ public class SIMR {
 		Job job = new Job(conf, "Spark In MapReduce (Simr)");
 
 		job.setNumReduceTasks(0);  // no reducers needed
-		job.setJarByClass(SIMR.class);
+		job.setJarByClass(Simr.class);
 		job.setMapperClass(MyMapper.class);
 
 		job.setOutputKeyClass(Text.class);
