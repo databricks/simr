@@ -1,10 +1,4 @@
-/**
- * Created with IntelliJ IDEA.
- * User: alig
- * Date: 8/23/13
- * Time: 2:14 PM
- * To change this template use File | Settings | File Templates.
- */
+package org.apache.spark.simr;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,8 +21,62 @@ import org.apache.hadoop.fs.*;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import scala.Tuple3;
 
+class RandomInputFormat extends InputFormat<Text, Text> {
+	/**
+	 * Generate the requested number of file splits, with the filename
+	 * set to the filename of the output file.
+	 */
+	public List<InputSplit> getSplits(JobContext context) throws IOException {
+		Configuration conf = context.getConfiguration();
+		int clusterSize = Integer.parseInt(conf.get("simr_cluster_size"));
+		InputSplit[] result = new InputSplit[clusterSize];
+
+		for(int i=0; i < result.length; ++i) {
+			result[i] = new FileSplit(new Path("dummy-split-" + i), 0, 1,
+					(String[])null);
+		}
+		return Arrays.asList(result);
+	}
+
+	/**
+	 * Return a single record (filename, "") where the filename is taken from
+	 * the file split.
+	 */
+	static class RandomRecordReader extends RecordReader<Text, Text> {
+		Path name;
+		boolean first = true;
+
+		public void initialize(InputSplit split, TaskAttemptContext context)  {
+			name = ((FileSplit) split).getPath();
+		}
+
+		public boolean nextKeyValue() {
+			if (first) {
+				first = false;
+				return true;
+			}
+			return false;
+		}
+
+		public Text getCurrentKey() {
+			return new Text(name.getName());
+		}
+
+		public Text getCurrentValue() {
+			return new Text("");
+		}
+
+		public void close() { }
+
+		public float getProgress() { return 0.0f; }
+	}
+
+	public RecordReader<Text, Text> createRecordReader(InputSplit split,
+													   TaskAttemptContext context) {
+		return new RandomRecordReader();
+	}
+}
 
 public class SIMR {
 
@@ -36,61 +84,7 @@ public class SIMR {
 	private static final String ELECTIONDIR = "election";
 	private static final String DRIVERURL = "driverurl";
 
-	static class RandomInputFormat extends InputFormat<Text, Text> {
-		/**
-		 * Generate the requested number of file splits, with the filename
-		 * set to the filename of the output file.
-		 */
-		public List<InputSplit> getSplits(JobContext context) throws IOException {
-			Configuration conf = context.getConfiguration();
-			int clusterSize = Integer.parseInt(conf.get("simr_cluster_size"));
-			InputSplit[] result = new InputSplit[clusterSize];
 
-			for(int i=0; i < result.length; ++i) {
-				result[i] = new FileSplit(new Path("dummy-split-" + i), 0, 1,
-						(String[])null);
-			}
-			return Arrays.asList(result);
-		}
-
-		/**
-		 * Return a single record (filename, "") where the filename is taken from
-		 * the file split.
-		 */
-		static class RandomRecordReader extends RecordReader<Text, Text> {
-			Path name;
-			boolean first = true;
-
-			public void initialize(InputSplit split, TaskAttemptContext context)  {
-				name = ((FileSplit) split).getPath();
-			}
-
-			public boolean nextKeyValue() {
-				if (first) {
-					first = false;
-					return true;
-				}
-				return false;
-			}
-
-			public Text getCurrentKey() {
-				return new Text(name.getName());
-			}
-
-			public Text getCurrentValue() {
-				return new Text("");
-			}
-
-			public void close() { }
-
-			public float getProgress() { return 0.0f; }
-		}
-
-		public RecordReader<Text, Text> createRecordReader(InputSplit split,
-														   TaskAttemptContext context) {
-			return new RandomRecordReader();
-		}
-	}
 
 	public static String getLocalIP() {
 		String ip;
@@ -253,7 +247,7 @@ public class SIMR {
 		String main_class = args[2];
 
 		if (args.length < 4) {
-			System.err.println("Usage: SIMR <out_dir> <your_jar_file> <main_class> <your_params>");
+			System.err.println("Usage: org.apache.spark.simr.SIMR <out_dir> <your_jar_file> <main_class> <your_params>");
 			System.err.println("\n<your_params> will be passed to your <main_class>");
 			System.err.println("The string %master% will be replaced with the SPARK master URL");
 			System.exit(1);
@@ -261,7 +255,7 @@ public class SIMR {
 
 		File file = new File(jar_file);
 		if (!file.exists()) {
-			System.err.println("SIMR ERROR: Coudln't find specified jar file (" + jar_file + ")");
+			System.err.println("org.apache.spark.simr.SIMR ERROR: Coudln't find specified jar file (" + jar_file + ")");
 			System.exit(1);
 		}
 
@@ -271,7 +265,7 @@ public class SIMR {
 			URLClassLoader mainCL = new URLClassLoader(new URL[]{jarUrl});
 			myClass = Class.forName(main_class, true, mainCL);
 		} catch(ClassNotFoundException ex) {
-			System.err.println("SIMR ERROR: Couldn't find specified class (" + main_class + ")");
+			System.err.println("org.apache.spark.simr.SIMR ERROR: Couldn't find specified class (" + main_class + ")");
 			System.exit(2);
 		} catch(Exception ex) {
 			ex.printStackTrace();
@@ -281,7 +275,7 @@ public class SIMR {
 		try {
 			myClass.getDeclaredMethod("main", new Class[]{String[].class});
 		} catch (Exception ex) {
-			System.err.println("SIMR ERROR: Specified class doesn't have an accessible static main method");
+			System.err.println("org.apache.spark.simr.SIMR ERROR: Specified class doesn't have an accessible static main method");
 			System.exit(2);
 		}
 
