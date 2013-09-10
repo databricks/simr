@@ -24,8 +24,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 class RandomInputFormat extends InputFormat<Text, Text> {
 	/**
-	 * Generate the requested number of file splits, with the filename
-	 * set to the filename of the output file.
+	 * Generate the specified number of dummy splits as given by simr
 	 */
 	public List<InputSplit> getSplits(JobContext context) throws IOException {
 		Configuration conf = context.getConfiguration();
@@ -80,12 +79,14 @@ class RandomInputFormat extends InputFormat<Text, Text> {
 
 public class SIMR {
 
-	private static final String SIMRTMPDIR = "simr-meta";
-	private static final String ELECTIONDIR = "election";
-	private static final String DRIVERURL = "driverurl";
+	private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SIMR
+	private static final String ELECTIONDIR = "election"; // Directory used to do master election
+	private static final String DRIVERURL = "driverurl";  // File used to store Spark driver URL
 
-
-
+	/**
+	 * @return The IP of the first network interface on this machine as a string, null in the case
+	 * of an exception from the underlying network interface.
+	 */
 	public static String getLocalIP() {
 		String ip;
 		try {
@@ -125,9 +126,7 @@ public class SIMR {
 	public static class MyMapper
 			extends Mapper<Object, Text, Text, Text>{
 
-		public void map(Object key, Text value, Context context
-		) throws IOException, InterruptedException {
-
+		public boolean isMaster(Context context) throws IOException {
 			Configuration conf = context.getConfiguration();
 			FileSystem fs = FileSystem.get(conf);
 
@@ -135,18 +134,17 @@ public class SIMR {
 			String electionDirName = simrDirName + "/" + ELECTIONDIR;
 
 			try {
-				fs.mkdirs(new Path(electionDirName));
+				fs.mkdirs(new Path(electionDirName));  // create election directory
 			} catch (Exception ex) {}
 
-			String myIP = getLocalIP();
+			String myIP = getLocalIP(); // write a file with current IP as name
+
 			Path myIpFile = new Path(electionDirName + "/" + myIP);
 			FSDataOutputStream outf = fs.create(myIpFile, true);
 			outf.close();
 
 
-
-			int myUniqueId = context.getTaskAttemptID().getTaskID().getId();
-
+			// look for file with smallest timestamp
 			long firstMapperTime = Long.MAX_VALUE;
 			String firstMapperIP = "";
 			for (FileStatus fstat : fs.listStatus(new Path(electionDirName + "/"))) {
@@ -158,9 +156,19 @@ public class SIMR {
 
 			}
 
-			context.write(new Text(firstMapperIP),new Text("SPARK MASTER"));
+			return myIP.equals(firstMapperIP);
+		}
 
-			if (myIP.equals(firstMapperIP)) {
+		public void map(Object key, Text value, Context context
+		) throws IOException, InterruptedException {
+
+			Configuration conf = context.getConfiguration();
+			FileSystem fs = FileSystem.get(conf);
+
+			String simrDirName = conf.get("simr_tmp_dir");
+			String myIP = getLocalIP(); // write a file with current IP as name
+
+			if (isMaster(context)) {
 
 				String master_url = "simr://" + simrDirName + "/" + DRIVERURL;
 				String main_class = conf.get("simr_main_class");
@@ -213,6 +221,7 @@ public class SIMR {
 				}
 				if (gotDriverUrl) {
 					context.write(new Text(myIP),new Text("Starting Spark Worker on port " + mUrl));
+					int myUniqueId = context.getTaskAttemptID().getTaskID().getId();
 					startWorker(mUrl, myUniqueId, maxCores);
 				}
 			}
