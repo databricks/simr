@@ -136,26 +136,26 @@ public class Simr {
 				fs.mkdirs(new Path(electionDirName));  // create election directory
 			} catch (Exception ex) {}
 
-			String myIP = getLocalIP(); // write a file with current IP as name
+			String myTaskId = context.getTaskAttemptID().getTaskID().toString();
 
-			Path myIpFile = new Path(electionDirName + "/" + myIP);
+			Path myIpFile = new Path(electionDirName + "/" + myTaskId);
 			FSDataOutputStream outf = fs.create(myIpFile, true);
 			outf.close();
 
 
 			// look for file with smallest timestamp
 			long firstMapperTime = Long.MAX_VALUE;
-			String firstMapperIP = "";
+			String firstMapperId = "";
 			for (FileStatus fstat : fs.listStatus(new Path(electionDirName + "/"))) {
 				long modTime = fstat.getModificationTime();
 				if (modTime < firstMapperTime) {
 					firstMapperTime = modTime;
-					firstMapperIP = fstat.getPath().getName();
+					firstMapperId = fstat.getPath().getName();
 				}
 
 			}
 
-			return myIP.equals(firstMapperIP);
+			return myTaskId.equals(firstMapperId);
 		}
 
 		public void map(Object key, Text value, Context context
