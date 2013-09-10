@@ -115,17 +115,14 @@ public class SIMR {
 		return null;
 	}
 
-	public static int startMasterAndGetPort(String masterIP) {
-		Tuple3 tuple3 = org.apache.spark.deploy.master.Master.startSystemAndActor(masterIP, 0, 8080);
-		int port = ((Integer) tuple3._2());
-		return port;
-	}
-
-	public static void startWorker(String masterUrl, int uniqueId) {
+	public static void startWorker(String masterUrl, int uniqueId, int maxCores) {
 		System.err.println("trying unique id: " + uniqueId + " at " + getLocalIP());
-		String[] exList = new String[]{masterUrl, Integer.toString(uniqueId), getLocalIP(), "1"};
+		String[] exList = new String[]{
+				masterUrl,
+				Integer.toString(uniqueId),
+				getLocalIP(),
+				Integer.toString(maxCores)};
 		org.apache.spark.executor.StandaloneExecutorBackend.main(exList);
-//		org.apache.spark.deploy.worker.Worker.main(new String[]{"spark://" + masterIP + ":" + masterPort});
 		try {
 			Thread.sleep(180000);
 		} catch(Exception ex) {}
@@ -202,6 +199,7 @@ public class SIMR {
 				int MAXTRIES = 10;
 				int tries = 0;
 				String mUrl = "";
+				int maxCores = 1;
 				Path driverFile = new Path(simrDirName + "/" + DRIVERURL);
 				System.err.println("Looking for file: " + driverFile);
 				while (!gotDriverUrl && tries++ < MAXTRIES) {
@@ -210,6 +208,7 @@ public class SIMR {
 						gotDriverUrl = true;
 						FSDataInputStream inPortFile =  fs.open(driverFile);
 						mUrl = inPortFile.readUTF();
+						maxCores = inPortFile.readInt();
 						inPortFile.close();
 					} else  {
 						context.write(new Text(myIP),new Text("Sleeping...try " + tries));
@@ -220,7 +219,7 @@ public class SIMR {
 				}
 				if (gotDriverUrl) {
 					context.write(new Text(myIP),new Text("Starting Spark Worker on port " + mUrl));
-					startWorker(mUrl, myUniqueId);
+					startWorker(mUrl, myUniqueId, maxCores);
 				}
 			}
 
