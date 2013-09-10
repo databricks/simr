@@ -1,4 +1,4 @@
-package simr;
+package org.apache.spark.simr;
 
 import java.io.File;
 import java.io.IOException;
@@ -255,7 +255,7 @@ public class Simr {
 		String main_class = args[2];
 
 		if (args.length < 4) {
-			System.err.println("Usage: simr.Simr <out_dir> <your_jar_file> <main_class> <your_params>");
+			System.err.println("Usage: org.apache.spark.simr.Simr <out_dir> <your_jar_file> <main_class> <your_params>");
 			System.err.println("\n<your_params> will be passed to your <main_class>");
 			System.err.println("The string %master% will be replaced with the SPARK master URL");
 			System.exit(1);
@@ -263,7 +263,7 @@ public class Simr {
 
 		File file = new File(jar_file);
 		if (!file.exists()) {
-			System.err.println("simr.Simr ERROR: Coudln't find specified jar file (" + jar_file + ")");
+			System.err.println("org.apache.spark.simr.Simr ERROR: Coudln't find specified jar file (" + jar_file + ")");
 			System.exit(1);
 		}
 
@@ -273,7 +273,7 @@ public class Simr {
 			URLClassLoader mainCL = new URLClassLoader(new URL[]{jarUrl});
 			myClass = Class.forName(main_class, true, mainCL);
 		} catch(ClassNotFoundException ex) {
-			System.err.println("simr.Simr ERROR: Couldn't find specified class (" + main_class + ")");
+			System.err.println("org.apache.spark.simr.Simr ERROR: Couldn't find specified class (" + main_class + ")");
 			System.exit(2);
 		} catch(Exception ex) {
 			ex.printStackTrace();
@@ -283,7 +283,7 @@ public class Simr {
 		try {
 			myClass.getDeclaredMethod("main", new Class[]{String[].class});
 		} catch (Exception ex) {
-			System.err.println("simr.Simr ERROR: Specified class doesn't have an accessible static main method");
+			System.err.println("org.apache.spark.simr.Simr ERROR: Specified class doesn't have an accessible static main method");
 			System.exit(2);
 		}
 
