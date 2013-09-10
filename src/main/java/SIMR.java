@@ -122,6 +122,7 @@ public class SIMR {
 	}
 
 	public static void startWorker(String masterUrl, int uniqueId) {
+		System.err.println("trying unique id: " + uniqueId);
 		String[] exList = new String[]{masterUrl, Integer.toString(uniqueId), getLocalIP(), "1"};
 		org.apache.spark.executor.StandaloneExecutorBackend.main(exList);
 //		org.apache.spark.deploy.worker.Worker.main(new String[]{"spark://" + masterIP + ":" + masterPort});
