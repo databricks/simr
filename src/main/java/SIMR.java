@@ -121,8 +121,8 @@ public class SIMR {
 		return port;
 	}
 
-	public static void startWorker(String masterUrl) {
-		String[] exList = new String[]{masterUrl, "1", getLocalIP(), "1"};
+	public static void startWorker(String masterUrl, int uniqueId) {
+		String[] exList = new String[]{masterUrl, Integer.toString(uniqueId), getLocalIP(), "1"};
 		org.apache.spark.executor.StandaloneExecutorBackend.main(exList);
 //		org.apache.spark.deploy.worker.Worker.main(new String[]{"spark://" + masterIP + ":" + masterPort});
 		try {
@@ -147,8 +147,13 @@ public class SIMR {
 			} catch (Exception ex) {}
 
 			String myIP = getLocalIP();
-			FSDataOutputStream outf = fs.create(new Path(electionDirName + "/" + myIP), true);
+			Path myIpFile = new Path(electionDirName + "/" + myIP);
+			FSDataOutputStream outf = fs.create(myIpFile, true);
 			outf.close();
+
+
+
+			int myUniqueId = context.getTaskAttemptID().getTaskID().getId();
 
 			long firstMapperTime = Long.MAX_VALUE;
 			String firstMapperIP = "";
@@ -214,7 +219,7 @@ public class SIMR {
 				}
 				if (gotDriverUrl) {
 					context.write(new Text(myIP),new Text("Starting Spark Worker on port " + mUrl));
-					startWorker(mUrl);
+					startWorker(mUrl, myUniqueId);
 				}
 			}
 
