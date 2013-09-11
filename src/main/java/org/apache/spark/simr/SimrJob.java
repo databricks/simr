@@ -76,7 +76,7 @@ public class SimrJob {
         String main_class = args[2];
 
         if (args.length < 4) {
-            System.err.println("Usage: org.apache.spark.simr.SimrJob <out_dir> <your_jar_file> <main_class> <your_params>");
+            System.err.println("Usage: SimrJob <out_dir> <your_jar_file> <main_class> <your_params>");
             System.err.println("\n<your_params> will be passed to your <main_class>");
             System.err.println("The string %master% will be replaced with the SPARK master URL");
             System.exit(1);
@@ -94,7 +94,7 @@ public class SimrJob {
             URLClassLoader mainCL = new URLClassLoader(new URL[]{jarUrl});
             myClass = Class.forName(main_class, true, mainCL);
         } catch(ClassNotFoundException ex) {
-            System.err.println("org.apache.spark.simr.SimrJob ERROR: Couldn't find specified class (" + main_class + ")");
+            System.err.println("SimrJob ERROR: Couldn't find specified class (" + main_class + ")");
             System.exit(2);
         } catch(Exception ex) {
             ex.printStackTrace();
@@ -104,7 +104,7 @@ public class SimrJob {
         try {
             myClass.getDeclaredMethod("main", new Class[]{String[].class});
         } catch (Exception ex) {
-            System.err.println("org.apache.spark.simr.SimrJob ERROR: Specified class doesn't have an accessible static main method");
+            System.err.println("SimrJob ERROR: Specified class doesn't have an accessible static main method");
             System.exit(2);
         }
 
@@ -139,12 +139,10 @@ public class SimrJob {
                 ToolRunner.run(new Configuration(), clusterSizeJob, args);
                 clusterSize = clusterSizeJob.getClusterSize();
             } catch (Exception ex) {
-                System.err.println("Coudln't find out cluster size.\n\n");
+                System.err.println("Couldn't find out cluster size.\n\n");
                 ex.printStackTrace();
             }
         }
-
-        System.err.println("Setting up a cluster of size (simr_cluster_size): " + clusterSize);
 
         conf.set("simr_cluster_size", Integer.toString(clusterSize));
 
@@ -175,6 +173,15 @@ public class SimrJob {
         checkParams(args);
         Configuration conf = new Configuration();
         updateConfig(conf, args);
+
+        System.err.println("         _               \n" +
+                "   _____(_)___ ___  _____\n" +
+                "  / ___/ / __ `__ \\/ ___/\n" +
+                " (__  ) / / / / / / /    \n" +
+                "/____/_/_/ /_/ /_/_/     \n");
+
+        System.err.println("Starting a SIMR cluster of size " + conf.get("simr_cluster_size"));
+
         Job job = setupJob(conf);
         System.exit(job.waitForCompletion(true) ? 0 : 1); // block until job finishes
     }

@@ -91,14 +91,7 @@ public class Simr {
         String main_class = conf.get("simr_main_class");
         String rest_args = conf.get("simr_rest_args");
 
-        System.err.println("rest_args from conf: " + rest_args);
-
         String[] program_args = rest_args.replaceAll("\\%master\\%", master_url).split(" ");
-        int tmpx = 0;
-        for (String s : program_args) {
-            System.err.println(tmpx + " : " + s);
-            tmpx++;
-        }
 
         try {
             URLClassLoader mainCL = new URLClassLoader(new URL[]{}, this.getClass().getClassLoader());
@@ -117,7 +110,6 @@ public class Simr {
         int maxCores = uc.cores;
         String masterUrl = uc.url;
 
-        System.err.println("trying unique id: " + uniqueId + " at " + getLocalIP());
         String[] exList = new String[]{
                 masterUrl,
                 Integer.toString(uniqueId),
@@ -134,7 +126,7 @@ public class Simr {
         String mUrl = "";
         int maxCores = 1;
         Path driverFile = new Path(simrDirName + "/" + DRIVERURL);
-        System.err.println("Looking for file: " + driverFile);
+
         while (!gotDriverUrl && tries++ < MAXTRIES) {
             FileStatus[] lsArr = fs.listStatus(driverFile);
             if (lsArr.length != 0 && lsArr[0].getLen() > 0) {
