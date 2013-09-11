@@ -38,6 +38,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class SimrJob {
     private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SimrJob
+    private static final String SIMRVER = "0.3";
 
     public static class MyMapper
             extends Mapper<Object, Text, Text, Text> {
@@ -157,7 +158,7 @@ public class SimrJob {
         String[] otherArgs = new GenericOptionsParser(conf, jarArgs).getRemainingArgs();
 
 
-        Job job = new Job(conf, "SimrJob 0.2");
+        Job job = new Job(conf, "Simr v" + SIMRVER);
 
         job.setNumReduceTasks(0);  // no reducers needed
         job.setJarByClass(SimrJob.class);
@@ -180,7 +181,7 @@ public class SimrJob {
                 "   _____(_)___ ___  _____\n" +
                 "  / ___/ / __ `__ \\/ ___/\n" +
                 " (__  ) / / / / / / /    \n" +
-                "/____/_/_/ /_/ /_/_/     \n");
+                "/____/_/_/ /_/ /_/_/      version " + SIMRVER + "\n");
 
         System.err.println("Starting a SIMR cluster of size " + conf.get("simr_cluster_size"));
 
