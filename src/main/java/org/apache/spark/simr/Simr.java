@@ -200,6 +200,14 @@ public class Simr {
         } else {
             startWorker();
         }
+
+        fs.delete(new Path(conf.get("simr_tmp_dir")), true); // delete tmp dir
+
+        for (FileStatus fstat : fs.listStatus(conf.get("simr_tmp_dir"))) {  // delete output files
+            if (fstat.getPath().getName().startsWith("part-m-")) {
+                fs.delete(fstat.getPath(), false);
+            }
+        }
     }
 
 }
