@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -45,6 +47,11 @@ public class SimrJob {
 
         public void map(Object key, Text value, Context context
         ) throws IOException, InterruptedException {
+
+            final Context ctx = context;
+            Timer timer = new Timer(true);
+            timer.scheduleAtFixedRate(new TimerTask() { public void run() { ctx.progress(); } }, 0, 8*60*1000);
+
             Simr simr = new Simr(context);
             simr.run();
         }
