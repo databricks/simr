@@ -92,7 +92,7 @@ public class SimrJob {
 
         File file = new File(jar_file);
         if (!file.exists()) {
-            System.err.println("org.apache.spark.simr.SimrJob ERROR: Coudln't find specified jar file (" + jar_file + ")");
+            System.err.println("SimrJob ERROR: Coudln't find specified jar file (" + jar_file + ")");
             System.exit(1);
         }
 

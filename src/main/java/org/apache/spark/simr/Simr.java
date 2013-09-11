@@ -44,6 +44,7 @@ public class Simr {
 
     private static final String ELECTIONDIR = "election"; // Directory used to do master election
     private static final String DRIVERURL = "driverurl";  // File used to store Spark driver URL
+    private static final String OUTDIR = "output";  // File used to store Spark driver URL
 
     static class UrlCoresTuple {
         public String url;
@@ -96,13 +97,18 @@ public class Simr {
         String[] program_args = rest_args.replaceAll("\\%master\\%", master_url).split(" ");
 
         try {
-            FSDataOutputStream fout = fs.create(new Path(conf.get("simr_tmp_dir") + "/" + "driver-stdout"));
-            System.setOut(new PrintStream(fout));
+            Path outDir = new Path(conf.get("simr_out_dir") + "/" + OUTDIR);
+            fs.mkdirs(outDir);
+            FSDataOutputStream stdout = fs.create(new Path(conf.get("simr_out_dir") + "/" + OUTDIR + "/driver.stdout"));
+            FSDataOutputStream stderr = fs.create(new Path(conf.get("simr_out_dir") + "/" + OUTDIR + "/driver.stderr"));
+            System.setOut(new PrintStream(stdout));
+            System.setErr(new PrintStream(stderr));
             URLClassLoader mainCL = new URLClassLoader(new URL[]{}, this.getClass().getClassLoader());
             Class myClass = Class.forName(main_class, true, mainCL);
             Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
             Object result = method.invoke(null, new Object[]{program_args});
-            fout.close();
+            stdout.close();
+            stderr.close();
         } catch (Exception ex) { System.out.println(ex); }
 
     }
