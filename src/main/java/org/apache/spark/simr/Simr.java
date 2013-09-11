@@ -17,7 +17,9 @@
 
 package org.apache.spark.simr;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -94,10 +96,13 @@ public class Simr {
         String[] program_args = rest_args.replaceAll("\\%master\\%", master_url).split(" ");
 
         try {
+            FSDataOutputStream fout = fs.create(new Path(conf.get("simr_tmp_dir") + "/" + "driver-stdout"));
+            System.setOut(new PrintStream(fout));
             URLClassLoader mainCL = new URLClassLoader(new URL[]{}, this.getClass().getClassLoader());
             Class myClass = Class.forName(main_class, true, mainCL);
             Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
             Object result = method.invoke(null, new Object[]{program_args});
+            fout.close();
         } catch (Exception ex) { System.out.println(ex); }
 
     }
