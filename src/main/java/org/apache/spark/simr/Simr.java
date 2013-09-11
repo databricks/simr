@@ -145,9 +145,6 @@ public class Simr {
                 Object result = method.invoke(null, new Object[]{program_args});
             } catch (Exception ex) { System.out.println(ex); }
 
-            try {
-                Thread.sleep(480000);
-            } catch(Exception ex) {}
         }
 
         public void startWorker(Configuration conf, FileSystem fs, Context context) throws IOException {
@@ -165,9 +162,6 @@ public class Simr {
                     getLocalIP(),
                     Integer.toString(maxCores)};
             org.apache.spark.executor.StandaloneExecutorBackend.main(exList);
-            try {
-                Thread.sleep(180000);
-            } catch(Exception ex) {}
         }
 
         public UrlCores getMasterURL(Configuration conf, FileSystem fs) throws IOException {
