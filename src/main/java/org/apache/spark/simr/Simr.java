@@ -89,6 +89,17 @@ public class Simr {
         return null;
     }
 
+    public void redirectOutput(String filePrefix) throws IOException {
+        Path outDir = new Path(conf.get("simr_out_dir") + "/" + OUTDIR);
+        fs.mkdirs(outDir);
+        FSDataOutputStream stdout = fs.create(
+                new Path(conf.get("simr_out_dir") + "/" + OUTDIR + "/" + filePrefix + ".stdout"));
+        FSDataOutputStream stderr = fs.create(
+                new Path(conf.get("simr_out_dir") + "/" + OUTDIR + "/" + filePrefix + ".stderr"));
+        System.setOut(new PrintStream(stdout));
+        System.setErr(new PrintStream(stdout));
+    }
+
     public void startMaster() {
         String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
         String main_class = conf.get("simr_main_class");
@@ -97,18 +108,11 @@ public class Simr {
         String[] program_args = rest_args.replaceAll("\\%master\\%", master_url).split(" ");
 
         try {
-            Path outDir = new Path(conf.get("simr_out_dir") + "/" + OUTDIR);
-            fs.mkdirs(outDir);
-            FSDataOutputStream stdout = fs.create(new Path(conf.get("simr_out_dir") + "/" + OUTDIR + "/driver.stdout"));
-            FSDataOutputStream stderr = fs.create(new Path(conf.get("simr_out_dir") + "/" + OUTDIR + "/driver.stderr"));
-            System.setOut(new PrintStream(stdout));
-            System.setErr(new PrintStream(stderr));
+            redirectOutput("driver");
             URLClassLoader mainCL = new URLClassLoader(new URL[]{}, this.getClass().getClassLoader());
             Class myClass = Class.forName(main_class, true, mainCL);
             Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
             Object result = method.invoke(null, new Object[]{program_args});
-            stdout.close();
-            stderr.close();
         } catch (Exception ex) { System.out.println(ex); }
 
     }
@@ -126,6 +130,9 @@ public class Simr {
                 Integer.toString(uniqueId),
                 getLocalIP(),
                 Integer.toString(maxCores)};
+
+        redirectOutput("worker" + uniqueId);
+
         org.apache.spark.executor.StandaloneExecutorBackend.main(exList);
     }
 
