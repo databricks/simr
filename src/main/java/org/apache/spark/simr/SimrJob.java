@@ -146,8 +146,10 @@ public class SimrJob {
 
         conf.set("simr_cluster_size", Integer.toString(clusterSize));
 
+
         conf.set("mapreduce.user.classpath.first", "true"); // important: ensure hadoop jars come last
         conf.set("mapred.map.tasks.speculative.execution", "false");
+        conf.set("mapreduce.map.maxattempts", "1"); // don't rerun if it crashes, needed in case Spark System.exit()'s
     }
 
     public static Job setupJob(Configuration conf) throws Exception {
