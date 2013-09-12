@@ -1,6 +1,12 @@
 #!/bin/bash
 
-#HADOOP=/root/hadoop/bin/hadoop    # Set this if "hadoop" is not in the PATH
+#################################################################
+#### Set this if the hadoop binary/script is not in the PATH ####
+# 
+# HADOOP=/root/hadoop/bin/hadoop
+#
+#################################################################
+#################################################################
 
 INPATH=$(type -P "hadoop") 
 PROGNAME=$(basename $0)
@@ -8,15 +14,17 @@ SIMRJAR="simr.jar"
 
 if [ -f "$INPATH" ]; then
   HADOOPBIN=$INPATH
-else
-  if [ -n $HADOOP ]; then
-    HADOOPBIN=$HADOOP
-  fi
+elif [ -n "$HADOOP" -a -f "$HADOOP"  ]; then
+  HADOOPBIN=$HADOOP
+elif [ -n "$HADOOP" -a -f "$HADOOP/bin/hadoop" ]; then
+  HADOOPBIN="$HADOOP/bin/hadoop"
+elif [ -n "$HADOOP" -a -f "$HADOOP/hadoop" ]; then
+  HADOOPBIN="$HADOOP/hadoop"
 fi
 
 if [ ! -f "$HADOOPBIN" ];
 then
-   echo "Error:\n  Couldn't find the hadoop executable, add it to the PATH or point \$HADOOP to it."
+   echo -e "Error:\n  Couldn't find the hadoop executable, add it to the PATH or point \$HADOOP to it."
    exit 1
 fi
 
@@ -44,7 +52,7 @@ then
   exit 1
 fi
 
-echo "Uploading $SIMRJAR to the Hadoop cluster, this may take a while"
+fsize=$(ls -1hl $SIMRJAR | cut -d " " -f 5)
+echo "Uploading $SIMRJAR ($fsize) to the Hadoop cluster, this may take a while"
 
-echo $HADOOP jar $SIMRJAR $OUTDIR $USERJAR $@
 exec $HADOOP jar $SIMRJAR $OUTDIR $USERJAR $@
