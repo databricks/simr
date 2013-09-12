@@ -17,7 +17,6 @@
 
 package org.apache.spark.simr;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
@@ -97,7 +96,7 @@ public class Simr {
         FSDataOutputStream stderr = fs.create(
                 new Path(conf.get("simr_out_dir") + "/" + OUTDIR + "/" + filePrefix + ".stderr"));
         System.setOut(new PrintStream(stdout));
-        System.setErr(new PrintStream(stdout));
+        System.setErr(new PrintStream(stderr));
     }
 
     public void startMaster() {
