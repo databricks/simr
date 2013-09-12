@@ -101,7 +101,7 @@ public class Simr {
         String main_class = conf.get("simr_main_class");
         String rest_args = conf.get("simr_rest_args");
 
-        String[] program_args = rest_args.replaceAll("\\%master\\%", master_url).split(" ");
+        String[] program_args = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
 
         try {
             redirectOutput("driver");

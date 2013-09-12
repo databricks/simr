@@ -88,7 +88,7 @@ public class SimrJob {
         if (args.length < 4) {
             System.err.println("Usage: SimrJob <out_dir> <your_jar_file> <main_class> <your_params>");
             System.err.println("\n<your_params> will be passed to your <main_class>");
-            System.err.println("The string %master% will be replaced with the SPARK master URL");
+            System.err.println("The string %spark_url% will be replaced with the SPARK master URL");
             System.exit(1);
         }
 
