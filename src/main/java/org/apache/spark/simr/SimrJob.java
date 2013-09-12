@@ -42,7 +42,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class SimrJob {
     private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SimrJob
-    private static final String SIMRVER = "0.4";
+    private static final String SIMRVER = "0.1";
 
     public static class MyMapper
             extends Mapper<Object, Text, Text, Text> {
@@ -205,6 +205,8 @@ public class SimrJob {
                 fs.delete(fstat.getPath(), false);
             }
         }
+
+        System.err.println("Output logs can be found in hdfs://" + new Path(conf.get("simr_out_dir")));
 
         System.exit(retBool ? 0 : 1); // block until job finishes
     }
