@@ -19,7 +19,7 @@ To run a Spark application, package it up as a JAR file and execute:
 * `jar_file` is a JAR file containing all your programs, e.g. `spark-examples.jar`
 * `main_class` is the name of the class with a `main` method, e.g. `org.apache.spark.examples.SparkPi`
 * `parameters` is a list of parameters that will be passed to your `main_class`. 
-** *Important*: the special parameter `%spark_url%` will be replaced with the Spark driver URL.
+** _Important_: the special parameter `%spark_url%` will be replaced with the Spark driver URL.
 
 Your output will be placed in the `outdir` in HDFS, this includes output from stdout/stderr for the driver and all executors.
 
