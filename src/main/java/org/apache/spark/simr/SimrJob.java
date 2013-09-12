@@ -26,6 +26,8 @@ import java.util.TimerTask;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.ClusterStatus;
@@ -194,6 +196,16 @@ public class SimrJob {
         System.err.println("Starting a SIMR cluster of size " + conf.get("simr_cluster_size"));
 
         Job job = setupJob(conf);
-        System.exit(job.waitForCompletion(true) ? 0 : 1); // block until job finishes
+
+        boolean retBool = job.waitForCompletion(true);
+
+        FileSystem fs = FileSystem.get(conf);
+        for (FileStatus fstat : fs.listStatus(new Path(conf.get("simr_out_dir")))) {  // delete output files
+            if (fstat.getPath().getName().startsWith("part-m-")) {
+                fs.delete(fstat.getPath(), false);
+            }
+        }
+
+        System.exit(retBool ? 0 : 1); // block until job finishes
     }
 }

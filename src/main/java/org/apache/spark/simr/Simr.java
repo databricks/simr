@@ -43,7 +43,6 @@ public class Simr {
 
     private static final String ELECTIONDIR = "election"; // Directory used to do master election
     private static final String DRIVERURL = "driverurl";  // File used to store Spark driver URL
-    private static final String OUTDIR = "output";  // File used to store Spark driver URL
 
     static class UrlCoresTuple {
         public String url;
@@ -89,12 +88,10 @@ public class Simr {
     }
 
     public void redirectOutput(String filePrefix) throws IOException {
-        Path outDir = new Path(conf.get("simr_out_dir") + "/" + OUTDIR);
-        fs.mkdirs(outDir);
         FSDataOutputStream stdout = fs.create(
-                new Path(conf.get("simr_out_dir") + "/" + OUTDIR + "/" + filePrefix + ".stdout"));
+                new Path(conf.get("simr_out_dir") + "/" + filePrefix + ".stdout"));
         FSDataOutputStream stderr = fs.create(
-                new Path(conf.get("simr_out_dir") + "/" + OUTDIR + "/" + filePrefix + ".stderr"));
+                new Path(conf.get("simr_out_dir") + "/" + filePrefix + ".stderr"));
         System.setOut(new PrintStream(stdout));
         System.setErr(new PrintStream(stderr));
     }
@@ -200,15 +197,6 @@ public class Simr {
             startWorker();
         }
 
-        System.err.println(conf.get("simr_tmp_dir"));
-        System.err.println(fs);
         fs.delete(new Path(conf.get("simr_tmp_dir")), true); // delete tmp dir
-
-        for (FileStatus fstat : fs.listStatus(new Path(conf.get("simr_tmp_dir")))) {  // delete output files
-            if (fstat.getPath().getName().startsWith("part-m-")) {
-                fs.delete(fstat.getPath(), false);
-            }
-        }
     }
-
 }
