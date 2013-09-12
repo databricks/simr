@@ -38,20 +38,25 @@ Assuming `spark-examples.jar` exists and contains the Spark examples, the follow
 ## Requirements
 * Java v1.6 is required
 * SIMR will ship Scala 2.9.3 and Spark 0.8 to the Hadoop cluster and execute your program with them.
+* SIMR written and compiled for Hadoop v1.2.1
 
 ## How it works (advanced)
 
 SIMR launches a Hadoop MapReduce job that only contains mappers. It
 ensures that a jumbo jar (simr.jar), containing Scala and Spark, gets
 uploaded to the machines of the mappers. It also ensures that the job
-jar you specified gets shipped to those nodes. The mappers use HDFS to
-do leader election to elect one of the mappers as the Spark
-driver. SIMR then executes your driver and communicates the driver URL
-(through %spark_url%) to all the other mappers. The other mappers then
-start Spark executors that are passed the driver URL (there is a SIMR
-specified backend scheduler in Spark). The executors connect back to
-the driver, which executes your program. All output to stdout and
-stderr is redirected to the specified HDFS directory. Once your job is
-done, the SIMR backend scheduler shuts down all the executors (hence
-the required call to `stop()`).
+jar you specified gets shipped to those nodes. 
+
+Once the mappers are all running with the right dependencies in place,
+SIMR uses HDFS to do leader election to elect one of the mappers as
+the Spark driver. SIMR then executes your job driver, which uses a new
+SIMR scheduler backend that generates and accepts driver URLs of the
+form `simr://path`.  SIMR thereafter communicates the new driver URL
+to all the mappers, which then start Spark executors. The executors
+connect back to the driver, which executes your program. 
+
+All output to stdout and stderr is redirected to the specified HDFS
+directory. Once your job is done, the SIMR backend scheduler has
+additional functionality to shut down all the executors (hence the new
+required call to `stop()`).
 
