@@ -1,0 +1,50 @@
+#!/bin/bash
+
+#HADOOP=/root/hadoop/bin/hadoop    # Set this if "hadoop" is not in the PATH
+
+INPATH=$(type -P "hadoop") 
+PROGNAME=$(basename $0)
+SIMRJAR="simr.jar"
+
+if [ -f "$INPATH" ]; then
+  HADOOPBIN=$INPATH
+else
+  if [ -n $HADOOP ]; then
+    HADOOPBIN=$HADOOP
+  fi
+fi
+
+if [ ! -f "$HADOOPBIN" ];
+then
+   echo "Error:\n  Couldn't find the hadoop executable, add it to the PATH or point \$HADOOP to it."
+   exit 1
+fi
+
+if [ "$#" -le 3 ];
+then
+  echo "Usage:"
+  echo "  $PROGNAME <hdfs_out_dir> <your_spark_jar> <main_class_name> <parameters>"
+  echo ""
+  echo "  <parameters> will be passed to your <main_class_name>, with %spark_url%"
+  echo "      replaced with the Spark URL that must be passed to SparkContext."
+  exit 1
+fi
+
+OUTDIR=$1
+USERJAR=`readlink -e $2`
+shift
+shift
+
+cd "`dirname $0`"
+
+if [ ! -f "$SIMRJAR" ];
+then
+  echo -e "Error:\n " \
+          "  Couldn't locate $SIMRJAR, make sure it exists in the same directory as this script"
+  exit 1
+fi
+
+echo "Uploading $SIMRJAR to the Hadoop cluster, this may take a while"
+
+echo $HADOOP jar $SIMRJAR $OUTDIR $USERJAR $@
+exec $HADOOP jar $SIMRJAR $OUTDIR $USERJAR $@
