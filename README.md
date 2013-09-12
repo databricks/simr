@@ -40,6 +40,16 @@ Assuming `spark-examples.jar` exists and contains the Spark examples, the follow
 * SIMR will ship Scala 2.9.3 and Spark 0.8 to the Hadoop cluster and execute your program with them.
 * SIMR written and compiled for Hadoop v1.2.1
 
+## Configuration
+
+The `$HADOOP` environment variable should point at the `hadoop` binary
+or its directory.
+
+By default SIMR figures out the number of task trackers in the cluster
+and launches a job that is the same size as the cluster. This can be
+adjusted by setting the Hadoop configuration parameter
+`simr.cluster.size`.
+
 ## How it works (advanced)
 
 SIMR launches a Hadoop MapReduce job that only contains mappers. It
