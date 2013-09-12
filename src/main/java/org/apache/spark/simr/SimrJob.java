@@ -141,8 +141,8 @@ public class SimrJob {
 
         int clusterSize = -1;
 
-        if (conf.get("simr_cluster_size") != null) {
-            clusterSize = Integer.parseInt(conf.get("simr_cluster_size"));
+        if (conf.get("simr.cluster.size") != null) {
+            clusterSize = Integer.parseInt(conf.get("simr.cluster.size"));
         } else {
             try {
                 ClusterSizeJob clusterSizeJob = new ClusterSizeJob();
