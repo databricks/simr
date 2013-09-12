@@ -44,7 +44,7 @@ Assuming `spark-examples.jar` exists and contains the Spark examples, the follow
 SIMR launches a Hadoop MapReduce job that only contains mappers. It
 ensures that a jumbo jar (simr.jar), containing Scala and Spark, gets
 uploaded to the machines of the mappers. It also ensures that the job
-jar you specified gets shipeed to those nodes. The mappers use HDFS to
+jar you specified gets shipped to those nodes. The mappers use HDFS to
 do leader election to elect one of the mappers as the Spark
 driver. SIMR then executes your driver and communicates the driver URL
 (through %spark_url%) to a bunch of executors on the rest of the
