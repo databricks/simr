@@ -1,12 +1,9 @@
 #!/bin/bash
 
-#################################################################
-#### Set this if the hadoop binary/script is not in the PATH ####
-# 
-# HADOOP=/root/hadoop/bin/hadoop
-#
-#################################################################
-#################################################################
+############################################################
+# Set this if the hadoop binary/script is not in the PATH  #
+# HADOOP=/root/hadoop/bin/hadoop                           #
+############################################################
 
 INPATH=$(type -P "hadoop") 
 PROGNAME=$(basename $0)
