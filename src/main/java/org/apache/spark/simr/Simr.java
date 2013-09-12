@@ -200,6 +200,8 @@ public class Simr {
             startWorker();
         }
 
+        System.err.println(conf.get("simr_tmp_dir"));
+        System.err.println(fs);
         fs.delete(new Path(conf.get("simr_tmp_dir")), true); // delete tmp dir
 
         for (FileStatus fstat : fs.listStatus(new Path(conf.get("simr_tmp_dir")))) {  // delete output files
