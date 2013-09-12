@@ -39,7 +39,7 @@ Assuming `spark-examples.jar` exists and contains the Spark examples, the follow
 * Java v1.6 is required
 * SIMR will ship Scala 2.9.3 and Spark 0.8 to the Hadoop cluster and execute your program with them.
 
-## How it works
+## How it works (advanced)
 
 SIMR launches a Hadoop MapReduce job that only contains mappers. It
 ensures that a jumbo jar (simr.jar), containing Scala and Spark, gets
@@ -47,10 +47,11 @@ uploaded to the machines of the mappers. It also ensures that the job
 jar you specified gets shipped to those nodes. The mappers use HDFS to
 do leader election to elect one of the mappers as the Spark
 driver. SIMR then executes your driver and communicates the driver URL
-(through %spark_url%) to a bunch of executors on the rest of the
-machines (there is a SIMR specified backend scheduler in Spark). The
-executors connect back to the driver, which executes your program. All
-output to stdout and stderr is redirected to the specified HDFS
-directory. Once your job is done, the SIMR backend scheduler shuts
-down all the executors (hence the required call to `stop()`).
+(through %spark_url%) to all the other mappers. The other mappers then
+start Spark executors that are passed the driver URL (there is a SIMR
+specified backend scheduler in Spark). The executors connect back to
+the driver, which executes your program. All output to stdout and
+stderr is redirected to the specified HDFS directory. Once your job is
+done, the SIMR backend scheduler shuts down all the executors (hence
+the required call to `stop()`).
 
