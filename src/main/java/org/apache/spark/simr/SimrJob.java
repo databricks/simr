@@ -82,6 +82,10 @@ public class SimrJob {
     }
 
     public static void checkParams(String[] args) {
+
+        for (int x = 0; x < args.length; x++)
+            System.err.println("Arg " + x + " -> " + args[x]);
+
         String jar_file = args[1];
         String main_class = args[2];
 
@@ -94,7 +98,7 @@ public class SimrJob {
 
         File file = new File(jar_file);
         if (!file.exists()) {
-            System.err.println("SimrJob ERROR: Coudln't find specified jar file (" + jar_file + ")");
+            System.err.println("SimrJob ERROR: Couldn't find specified jar file (" + jar_file + ")");
             System.exit(1);
         }
 
