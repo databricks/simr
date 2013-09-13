@@ -125,9 +125,14 @@ public class SimrJob {
     }
 
     public static void updateConfig(Configuration conf, String[] args) {
+        for (String arg : args)
+            System.err.println("Arguments to updateConfig: " + arg);
+
         String out_dir = args[0];
         String jar_file = args[1];
         String main_class = args[2];
+
+        System.err.println("jar_file: " + jar_file);
 
         String rest_args = ""; // all of the rest of the args joined together
         for (int x = 3; x < args.length; x++) {
