@@ -187,6 +187,11 @@ public class SimrJob {
     }
 
     public static void main(String[] args) throws Exception {
+        int xx=0;
+        for (String arg : args) {
+            System.err.println("Arg -> " + arg + " (" + (xx++) + ")");
+        }
+
         checkParams(args);
         Configuration conf = new Configuration();
         updateConfig(conf, args);
