@@ -169,6 +169,7 @@ public class SimrJob {
 
     public static Job setupJob(Configuration conf) throws Exception {
         String[] jarArgs = new String[]{"-libjars", conf.get("simr_jar_file")}; // hadoop ships jars
+        System.err.println("Added " + conf.get("simr_jar_file"));
         String[] otherArgs = new GenericOptionsParser(conf, jarArgs).getRemainingArgs();
 
 
