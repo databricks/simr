@@ -9,6 +9,11 @@ INPATH=$(type -P "hadoop")
 PROGNAME=$(basename $0)
 SIMRJAR="simr.jar"
 
+if [ -a "$SIMRJAR" ];
+then
+  SIMRJARACTUAL=$(readlink -e $SIMRJAR)
+fi
+
 if [ -f "$INPATH" ]; then
   HADOOPBIN=$INPATH
 elif [ -n "$HADOOP" -a -f "$HADOOP"  ]; then
@@ -36,7 +41,13 @@ then
 fi
 
 OUTDIR=$1
-USERJAR=`readlink -e $2`
+USERJAR=$2
+
+if [ -a "$USERJAR" ];
+then
+  USERJAR=$(readlink -e $USERJAR)
+fi
+
 shift
 shift
 
@@ -49,7 +60,7 @@ then
   exit 1
 fi
 
-fsize=$(ls -1hl $SIMRJAR | cut -d " " -f 5)
+fsize=$(ls -1hl $SIMRJARACTUAL | cut -d " " -f 5)
 echo "Uploading $SIMRJAR ($fsize) to the Hadoop cluster, this may take a while"
 
 exec $HADOOPBIN jar $SIMRJAR $OUTDIR $USERJAR $@
