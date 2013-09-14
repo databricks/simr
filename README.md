@@ -47,7 +47,8 @@ or its directory.
 
 By default SIMR figures out the number of task trackers in the cluster
 and launches a job that is the same size as the cluster. This can be
-adjusted by setting the Hadoop configuration parameter
+adjusted by supplying the command line parameter ``--size=<integer>``
+to ``simr`` or setting the Hadoop configuration parameter
 `simr.cluster.size`.
 
 ## How it works (advanced)
