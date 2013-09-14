@@ -21,8 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -43,6 +42,12 @@ import org.apache.hadoop.util.ToolRunner;
 public class SimrJob {
     private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SimrJob
     private static final String SIMRVER = "0.1";
+    CmdLine cmd;
+
+    public SimrJob(String[] args) {
+        cmd = new CmdLine(args);
+        cmd.parse();
+    }
 
     public static class MyMapper
             extends Mapper<Object, Text, Text, Text> {
@@ -81,7 +86,8 @@ public class SimrJob {
 
     }
 
-    public static void checkParams(String[] args) {
+    public void checkParams() {
+        String[] args = cmd.getArgs();
         String jar_file = args[1];
         String main_class = args[2];
 
@@ -120,7 +126,8 @@ public class SimrJob {
 
     }
 
-    public static void updateConfig(Configuration conf, String[] args) {
+    public void updateConfig(Configuration conf) {
+        String[] args = cmd.getArgs();
         String out_dir = args[0];
         String jar_file = args[1];
         String main_class = args[2];
@@ -141,7 +148,9 @@ public class SimrJob {
 
         int clusterSize = -1;
 
-        if (conf.get("simr.cluster.size") != null) {
+        if (cmd.getIntValue("size") != null) {
+            clusterSize = cmd.getIntValue("size");
+        } else if (conf.get("simr.cluster.size") != null) {
             clusterSize = Integer.parseInt(conf.get("simr.cluster.size"));
         } else {
             try {
@@ -163,7 +172,7 @@ public class SimrJob {
         conf.setInt("mapred.map.max.attempts", 1); // don't rerun if it crashes, needed in case Spark System.exit()'s
     }
 
-    public static Job setupJob(Configuration conf) throws Exception {
+    public Job setupJob(Configuration conf) throws Exception {
         String[] jarArgs = new String[]{"-libjars", conf.get("simr_jar_file")}; // hadoop ships jars
         System.err.println("Added " + conf.get("simr_jar_file"));
         String[] otherArgs = new GenericOptionsParser(conf, jarArgs).getRemainingArgs();
@@ -183,10 +192,10 @@ public class SimrJob {
         return job;
     }
 
-    public static void main(String[] args) throws Exception {
-        checkParams(args);
+    public boolean run() throws Exception {
+        checkParams();
         Configuration conf = new Configuration();
-        updateConfig(conf, args);
+        updateConfig(conf);
 
         System.err.println("         _               \n" +
                 "   _____(_)___ ___  _____\n" +
@@ -208,7 +217,11 @@ public class SimrJob {
         }
 
         System.err.println("Output logs can be found in hdfs://" + new Path(conf.get("simr_out_dir")));
+        return retBool;
+    }
 
-        System.exit(retBool ? 0 : 1); // block until job finishes
+    public static void main(String[] args) throws Exception {
+        SimrJob simrJob = new SimrJob(args);
+        System.exit(simrJob.run() ? 0 : 1);
     }
 }
