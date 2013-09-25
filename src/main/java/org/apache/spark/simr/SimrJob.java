@@ -233,8 +233,7 @@ public class SimrJob {
         if (cmd.containsCommand("shell")) {
             job.submit();
 
-            URLClassLoader mainCL = new URLClassLoader(new URL[]{new File("spark.jar").toURI().toURL()},
-                    this.getClass().getClassLoader());
+            URLClassLoader mainCL = new URLClassLoader(new URL[]{new File("spark.jar").toURI().toURL()});
             Class myClass = Class.forName("org.apache.spark.repl.SimrReplClient", true, mainCL);
             Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
             String[] program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL};
