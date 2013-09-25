@@ -143,7 +143,7 @@ public class Simr {
 
         while (!gotDriverUrl && tries++ < MAXTRIES) {
             FileStatus[] lsArr = fs.listStatus(driverFile);
-            if (lsArr.length != 0 && lsArr[0].getLen() > 0) {
+            if (lsArr != null && lsArr.length != 0 && lsArr[0].getLen() > 0) {
                 gotDriverUrl = true;
                 FSDataInputStream inPortFile =  fs.open(driverFile);
                 mUrl = inPortFile.readUTF();
@@ -196,7 +196,5 @@ public class Simr {
         } else {
             startWorker();
         }
-
-        fs.delete(new Path(conf.get("simr_tmp_dir")), true); // delete tmp dir
     }
 }
