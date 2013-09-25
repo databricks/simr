@@ -98,8 +98,6 @@ public class Simr {
     }
 
     public void startShell() {
-        String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
-
         try {
             redirectOutput("driver");
             org.apache.spark.repl.SimrReplServer.main(new String[]{
@@ -203,7 +201,7 @@ public class Simr {
 
     public void run() throws IOException {
         if (isMaster()) {
-            if (conf.get("simr_shell").toLowerCase() == "true")
+            if (conf.get("simr_shell").toLowerCase().equals("true"))
                 startShell();
             else
                 startMaster();
