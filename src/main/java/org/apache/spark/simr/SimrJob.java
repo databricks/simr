@@ -43,7 +43,7 @@ import org.apache.hadoop.util.ToolRunner;
 public class SimrJob {
     private static final String SPARKJAR = "spark.jar"; // Spark assembly jar
     private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SimrJob
-    private static final String SIMRVER = "0.3";
+    private static final String SIMRVER = "0.4";
     CmdLine cmd;
 
     public SimrJob(String[] args) {
