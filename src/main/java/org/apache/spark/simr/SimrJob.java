@@ -40,6 +40,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 public class SimrJob {
+    private static final String SPARKJAR = "spark.jar"; // Spark assembly jar
     private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SimrJob
     private static final String SIMRVER = "0.1";
     CmdLine cmd;
@@ -173,7 +174,7 @@ public class SimrJob {
     }
 
     public Job setupJob(Configuration conf) throws Exception {
-        String[] jarArgs = new String[]{"-libjars", conf.get("simr_jar_file")}; // hadoop ships jars
+        String[] jarArgs = new String[]{"-libjars", SPARKJAR + "," + conf.get("simr_jar_file")}; // hadoop ships jars
         System.err.println("Added " + conf.get("simr_jar_file"));
         String[] otherArgs = new GenericOptionsParser(conf, jarArgs).getRemainingArgs();
 
