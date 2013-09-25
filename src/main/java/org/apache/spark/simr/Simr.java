@@ -43,6 +43,7 @@ public class Simr {
 
     private static final String ELECTIONDIR = "election"; // Directory used to do master election
     private static final String DRIVERURL = "driverurl";  // File used to store Spark driver URL
+    static final String SHELLURL = "shellurl";  // File used to store Spark driver URL
 
     static class UrlCoresTuple {
         public String url;
@@ -96,6 +97,17 @@ public class Simr {
         System.setErr(new PrintStream(stderr));
     }
 
+    public void startShell() {
+        String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
+
+        try {
+            redirectOutput("driver");
+            org.apache.spark.repl.SimrReplServer.main(new String[]{
+                    conf.get("simr_tmp_dir") + "/" + SHELLURL,
+                    getLocalIP() });
+        } catch (Exception ex) { System.out.println(ex); }
+    }
+
     public void startMaster() {
         String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
         String main_class = conf.get("simr_main_class");
@@ -110,7 +122,6 @@ public class Simr {
             Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
             Object result = method.invoke(null, new Object[]{program_args});
         } catch (Exception ex) { System.out.println(ex); }
-
     }
 
     public void startWorker() throws IOException {
@@ -192,7 +203,10 @@ public class Simr {
 
     public void run() throws IOException {
         if (isMaster()) {
-            startMaster();
+            if (conf.get("simr_shell").toLowerCase() == "true")
+                startShell();
+            else
+                startMaster();
         } else {
             startWorker();
         }

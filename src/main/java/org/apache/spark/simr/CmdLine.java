@@ -43,7 +43,6 @@ class Cmd {
 class CmdLine {
 
     List<String> args;
-//    List<Cmd> cmds = new LinkedList<Cmd>();
     Map<String,Cmd> cmds = new HashMap<String,Cmd>();
 
     public CmdLine(String[] args) {
@@ -69,6 +68,10 @@ class CmdLine {
             return null;
         }
         return ret;
+    }
+
+    public boolean containsCommand(String key) {
+        return cmds.containsKey(key.toLowerCase());
     }
 
     public Cmd getCmd(String key) {

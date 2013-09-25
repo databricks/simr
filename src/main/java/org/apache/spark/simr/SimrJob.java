@@ -42,7 +42,7 @@ import org.apache.hadoop.util.ToolRunner;
 public class SimrJob {
     private static final String SPARKJAR = "spark.jar"; // Spark assembly jar
     private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SimrJob
-    private static final String SIMRVER = "0.2";
+    private static final String SIMRVER = "0.3";
     CmdLine cmd;
 
     public SimrJob(String[] args) {
@@ -89,15 +89,21 @@ public class SimrJob {
 
     public void checkParams() {
         String[] args = cmd.getArgs();
-        String jar_file = args[1];
-        String main_class = args[2];
 
-        if (args.length < 4) {
+        if ( (!cmd.containsCommand("shell") && args.length < 4) || (cmd.containsCommand("shell") && args.length < 1) ) {
+            System.err.println("Usage: SimrJob --shell <out_dir>");
             System.err.println("Usage: SimrJob <out_dir> <your_jar_file> <main_class> <your_params>");
-            System.err.println("\n<your_params> will be passed to your <main_class>");
-            System.err.println("The string %spark_url% will be replaced with the SPARK master URL");
+            System.err.println("\n  --shell launches a Spark shell in the cluster with a remote interface on this node");
+            System.err.println("  <your_params> will be passed to your <main_class>");
+            System.err.println("  The string %spark_url% will be replaced with the SPARK master URL");
             System.exit(1);
         }
+
+        if (cmd.containsCommand("shell"))
+            return;
+
+        String jar_file = args[1];
+        String main_class = args[2];
 
         File file = new File(jar_file);
         if (!file.exists()) {
@@ -128,24 +134,24 @@ public class SimrJob {
     }
 
     public void updateConfig(Configuration conf) {
-        String[] args = cmd.getArgs();
-        String out_dir = args[0];
-        String jar_file = args[1];
-        String main_class = args[2];
 
-        String rest_args = ""; // all of the rest of the args joined together
-        for (int x = 3; x < args.length; x++) {
-            rest_args += args[x];
-            if (x < args.length-1)
-                rest_args += " ";
-        }
+        conf.set("mapreduce.user.classpath.first", "true"); // important: ensure hadoop jars come last
+        conf.set("mapred.map.tasks.speculative.execution", "false");
+        conf.setInt("mapreduce.map.maxattempts", 1); // don't rerun if it crashes, needed in case Spark System.exit()'s
+        conf.setInt("mapred.map.max.attempts", 1); // don't rerun if it crashes, needed in case Spark System.exit()'s
+
+        String[] args = cmd.getArgs();
+
+        if (cmd.containsCommand("shell"))
+            conf.set("simr_shell", "true");
+        else
+            conf.set("simr_shell", "false");
+
+        String out_dir = args[0];
 
         Path tmpPath = new Path(out_dir, SIMRTMPDIR);
         conf.set("simr_tmp_dir", tmpPath.toString());
         conf.set("simr_out_dir", out_dir);
-        conf.set("simr_jar_file", jar_file);
-        conf.set("simr_main_class", main_class);
-        conf.set("simr_rest_args", rest_args);
 
         int clusterSize = -1;
 
@@ -166,18 +172,32 @@ public class SimrJob {
 
         conf.set("simr_cluster_size", Integer.toString(clusterSize));
 
+        if (!cmd.containsCommand("shell")) {
+            String jar_file = args[1];
+            String main_class = args[2];
 
-        conf.set("mapreduce.user.classpath.first", "true"); // important: ensure hadoop jars come last
-        conf.set("mapred.map.tasks.speculative.execution", "false");
-        conf.setInt("mapreduce.map.maxattempts", 1); // don't rerun if it crashes, needed in case Spark System.exit()'s
-        conf.setInt("mapred.map.max.attempts", 1); // don't rerun if it crashes, needed in case Spark System.exit()'s
+            String rest_args = ""; // all of the rest of the args joined together
+            for (int x = 3; x < args.length; x++) {
+                rest_args += args[x];
+                if (x < args.length-1)
+                    rest_args += " ";
+            }
+
+            conf.set("simr_jar_file", jar_file);
+            conf.set("simr_main_class", main_class);
+            conf.set("simr_rest_args", rest_args);
+        }
     }
 
     public Job setupJob(Configuration conf) throws Exception {
-        String[] jarArgs = new String[]{"-libjars", SPARKJAR + "," + conf.get("simr_jar_file")}; // hadoop ships jars
-        System.err.println("Added " + conf.get("simr_jar_file"));
-        String[] otherArgs = new GenericOptionsParser(conf, jarArgs).getRemainingArgs();
+        String jars = SPARKJAR;
 
+        if (!cmd.containsCommand("shell"))
+            jars += "," + conf.get("simr_jar_file");
+
+        String[] jarArgs = new String[]{"-libjars", jars}; // hadoop ships jars
+
+        String[] otherArgs = new GenericOptionsParser(conf, jarArgs).getRemainingArgs();
 
         Job job = new Job(conf, "Simr v" + SIMRVER);
 
@@ -208,7 +228,13 @@ public class SimrJob {
 
         Job job = setupJob(conf);
 
-        boolean retBool = job.waitForCompletion(true);
+        boolean retBool = true;
+        if (cmd.containsCommand("shell")) {
+            job.submit();
+            org.apache.spark.repl.SimrReplClient.main(new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL});
+        } else {
+            retBool = job.waitForCompletion(true);
+        }
 
         FileSystem fs = FileSystem.get(conf);
         for (FileStatus fstat : fs.listStatus(new Path(conf.get("simr_out_dir")))) {  // delete output files
