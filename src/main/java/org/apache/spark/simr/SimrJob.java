@@ -19,6 +19,7 @@ package org.apache.spark.simr;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
@@ -231,7 +232,13 @@ public class SimrJob {
         boolean retBool = true;
         if (cmd.containsCommand("shell")) {
             job.submit();
-            org.apache.spark.repl.SimrReplClient.main(new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL});
+
+            URLClassLoader mainCL = new URLClassLoader(new URL[]{new File("simr.jar").toURI().toURL()},
+                    this.getClass().getClassLoader());
+            Class myClass = Class.forName("org.apache.spark.repl.SimrReplClient", true, mainCL);
+            Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
+            String[] program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL};
+            Object result = method.invoke(null, new Object[]{program_args});
         } else {
             retBool = job.waitForCompletion(true);
         }
