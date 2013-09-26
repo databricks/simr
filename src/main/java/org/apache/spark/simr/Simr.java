@@ -98,6 +98,21 @@ public class Simr {
     }
 
     public void startShell() {
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+
+//        URL[] urls = ((URLClassLoader)cl).getURLs();
+//
+//        for(URL url: urls){
+//            System.out.println(url.getFile());
+//        }
+//
+        String sep = System.getProperty("path.separator");
+        String classpath = System.getProperty("java.class.path");
+        System.out.println("java.class.path=" + classpath);
+        System.out.println("CLASSPATH=" + System.getenv("CLASSPATH"));
+        System.out.println("new CLASSPATH=" + System.getenv("CLASSPATH") + sep + classpath);
+        System.getenv().put("CLASSPATH", System.getenv("CLASSPATH") + sep + classpath);
+
         try {
             redirectOutput("driver");
             org.apache.spark.repl.SimrReplServer.main(new String[]{
