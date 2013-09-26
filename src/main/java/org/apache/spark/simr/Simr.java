@@ -98,15 +98,6 @@ public class Simr {
     }
 
     public void startShell() {
-        ClassLoader cl = ClassLoader.getSystemClassLoader();
-
-//        URL[] urls = ((URLClassLoader)cl).getURLs();
-//
-//        for(URL url: urls){
-//            System.out.println(url.getFile());
-//        }
-//
-
         try {
             redirectOutput("driver");
             org.apache.spark.repl.SimrReplServer.main(new String[]{
