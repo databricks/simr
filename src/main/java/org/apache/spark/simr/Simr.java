@@ -100,7 +100,7 @@ public class Simr {
     public void startShell() {
         String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
         try {
-//            redirectOutput("driver");
+            redirectOutput("driver");
             org.apache.spark.repl.SimrReplServer.main(new String[]{
                     conf.get("simr_tmp_dir") + "/" + SHELLURL,
                     getLocalIP(),
