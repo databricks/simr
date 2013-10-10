@@ -11,3 +11,5 @@ version := "1.0-SNAPSHOT"
 scalaVersion := "2.9.3"
 
 mainClass in assembly := Some("org.apache.spark.simr.SimrJob")
+
+javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
