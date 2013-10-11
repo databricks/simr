@@ -30,7 +30,7 @@ then
    exit 1
 fi
 
-if [ "$#" -le 3 ];
+if [ "$#" -le 1 ];
 then
   echo "Usage:"
   echo "  $PROGNAME <hdfs_out_dir> <your_spark_jar> <main_class_name> <parameters>"
@@ -63,4 +63,4 @@ fi
 fsize=$(ls -1hl $SIMRJARACTUAL | cut -d " " -f 5)
 echo "Uploading $SIMRJAR ($fsize) to the Hadoop cluster, this may take a while"
 
-exec $HADOOPBIN jar $SIMRJAR $OUTDIR $USERJAR $@
+HADOOP_CLASSPATH=$SIMRJARACTUAL exec $HADOOPBIN jar $SIMRJAR $OUTDIR $USERJAR $@
