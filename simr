@@ -9,11 +9,6 @@ INPATH=$(type -P "hadoop")
 PROGNAME=$(basename $0)
 SIMRJAR="simr.jar"
 
-if [ -a "$SIMRJAR" ];
-then
-  SIMRJARACTUAL=$(readlink -e $SIMRJAR)
-fi
-
 if [ -f "$INPATH" ]; then
   HADOOPBIN=$INPATH
 elif [ -n "$HADOOP" -a -f "$HADOOP"  ]; then
@@ -33,10 +28,17 @@ fi
 if [ "$#" -le 1 ];
 then
   echo "Usage:"
-  echo "  $PROGNAME <hdfs_out_dir> <your_spark_jar> <main_class_name> <parameters>"
+  echo "  $PROGNAME [--size=N] <hdfs_out_dir> <your_spark_jar> <main_class_name> <parameters>"
   echo ""
   echo "  <parameters> will be passed to your <main_class_name>, with %spark_url%"
   echo "      replaced with the Spark URL that must be passed to SparkContext."
+  echo ""
+  echo "      --size can optionally be set to indicate the size of the cluster."
+  echo ""
+  echo "  $PROGNAME [--size=N] --shell <hdfs_out_dir>"
+  echo ""
+  echo "  Run $PROGNAME with an interactive shell."
+  echo ""
   exit 1
 fi
 
@@ -60,7 +62,7 @@ then
   exit 1
 fi
 
-fsize=$(ls -1hl $SIMRJARACTUAL | cut -d " " -f 5)
+fsize=$(ls -1hl $SIMRJAR | cut -d " " -f 5)
 echo "Uploading $SIMRJAR ($fsize) to the Hadoop cluster, this may take a while"
 
-HADOOP_CLASSPATH=$SIMRJARACTUAL exec $HADOOPBIN jar $SIMRJAR $OUTDIR $USERJAR $@
+HADOOP_CLASSPATH=$SIMRJAR exec $HADOOPBIN jar $SIMRJAR $OUTDIR $USERJAR $@
