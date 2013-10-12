@@ -1,14 +1,17 @@
 package org.apache.spark.simr
 
-import scala.collection.JavaConversions._
-import scala.tools.jline.console.ConsoleReader
+import java.util.concurrent.TimeoutException
+import java.net.InetAddress
 import akka.actor._
+import akka.dispatch.Await
 import akka.event.Logging
+import akka.pattern.ask
+import akka.util.Timeout
+import akka.util.duration._
+import jline.console.ConsoleReader
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.spark.util.AkkaUtils
-import java.net.InetAddress
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -32,6 +35,10 @@ class SimrReplClient extends Actor {
 
   var server: ActorRef = null
 
+  var frontCli: ActorRef = null
+
+  var needToReply = false
+
   def receive = {
     case NewCommand(str) =>
       println("client command: " + str)
@@ -40,6 +47,8 @@ class SimrReplClient extends Actor {
     case ReplInputLine(line) =>
       //      println("client command: " + str)
       server ! ReplInputLine(line)
+      frontCli = sender
+      needToReply = true
 
     case InitClient(serverUrl: String) =>
       server = context.actorFor(serverUrl)
@@ -54,6 +63,11 @@ class SimrReplClient extends Actor {
       }
       out.print("\r")
       (0 to size-1).foreach(i => out.print(buf(i)))
+      if (needToReply) {
+        frontCli ! "continue"
+        needToReply = false
+      }
+
 
     case ShutdownSimr() =>
       server ! ShutdownSimr()
@@ -61,7 +75,7 @@ class SimrReplClient extends Actor {
 }
 
 object SimrReplClient {
-  val SIMR_PROMPT: String = "simr> "
+  val SIMR_PROMPT: String = "scala> "
   val SIMR_SYSTEM_NAME = "SimrRepl"
 
   var hdfsFile: String = null
@@ -113,15 +127,23 @@ object SimrReplClient {
 
   def readLoop(client: ActorRef) {
     val console = new ConsoleReader()
-    console.setPrompt(" " * SimrReplClient.SIMR_PROMPT.length)
+//    console.setPrompt(SimrReplClient.SIMR_PROMPT)
+    console.setPrompt("")
+    console.setPromptLen(SimrReplClient.SIMR_PROMPT.length)
+    console.setSearchPrompt(SimrReplClient.SIMR_PROMPT)
+
+    implicit val timeout = Timeout(2 seconds)
 
     var line: String = ""
 
     do {
       line = console.readLine()
-      if (line != null)
-        client ! ReplInputLine(line + "\n")
-      else
+      if (line != null) {
+        val future = client ? ReplInputLine(line + "\n")
+        try {
+          val result = Await.result(future, timeout.duration).asInstanceOf[String]
+        } catch { case ex: TimeoutException => Unit }
+      } else
         client ! ShutdownSimr()
     } while (line != null)
   }
@@ -129,7 +151,6 @@ object SimrReplClient {
   def main(args: Array[String]) {
     parseParams(args)
     val replUrl = getReplUrl()
-    println("debug: using repl url " + replUrl)
     setupActorSystem()
     val client = actorSystem.actorOf(Props[SimrReplClient], "SimrReplClient")
     client ! InitClient(replUrl)
@@ -139,4 +160,3 @@ object SimrReplClient {
     actorSystem.shutdown()
   }
 }
-

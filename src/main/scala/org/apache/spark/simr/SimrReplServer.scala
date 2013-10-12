@@ -98,6 +98,7 @@ class SimrReplServer(simrUrl: String) extends Actor {
 
       org.apache.spark.repl.Main.interp = interp
       interp.setPrompt("\n" + SimrReplClient.SIMR_PROMPT)
+//      interp.setPrompt("")
 
       interp.settings = new scala.tools.nsc.Settings
       val urlStrs = urls.map(_.toString.replaceAll("^file:/","/"))
@@ -135,7 +136,7 @@ class SimrReplServer(simrUrl: String) extends Actor {
       start()
       client = sender
       val cancellable =
-        context.system.scheduler.schedule(Duration("0 ms"), Duration("250 ms"), self, FlushMessages())
+        context.system.scheduler.schedule(Duration("0 ms"), Duration("10 ms"), self, FlushMessages())
 
     case NewCommand(str: String) =>
       replIn.write(str)
