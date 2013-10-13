@@ -13,3 +13,11 @@ scalaVersion := "2.9.3"
 mainClass in assembly := Some("org.apache.spark.simr.SimrJob")
 
 javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
+
+mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
+  {
+    case PathList("META-INF", xs @ _*)         => MergeStrategy.discard
+    case PathList("org", "fusesource", xs @ _*)         => MergeStrategy.first
+    case x => old(x)
+  }
+}

@@ -8,7 +8,7 @@ import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import akka.util.duration._
-import jline.console.ConsoleReader
+import jline_modified.console.ConsoleReader
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.spark.util.AkkaUtils
