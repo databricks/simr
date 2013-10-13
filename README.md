@@ -2,6 +2,9 @@
 
 ## Quick Guide
 
+This guide assumes `simr.jar` exists. If you don't have it you have to
+build a Spark jumbo jar and build Simr. See below.
+
 Place `simr` and `simr.jar` in a directory and call `simr` to get
 usage information. Try this! If you get stuck, continue reading.
 
@@ -35,6 +38,11 @@ Assuming `spark-examples.jar` exists and contains the Spark examples, the follow
 ./simr pi_outdir spark-examples.jar org.apache.spark.examples.SparkPi %spark_url% 100
 ```
 
+Alternatively, you can launch a Spark-shell like this:
+```shell
+./simr new_out_dir --shell
+```
+
 ## Requirements
 * Java v1.6 is required
 * SIMR will ship Scala 2.9.3 and Spark 0.8 to the Hadoop cluster and execute your program with them.
@@ -50,6 +58,25 @@ and launches a job that is the same size as the cluster. This can be
 adjusted by supplying the command line parameter ``--size=<integer>``
 to ``simr`` or setting the Hadoop configuration parameter
 `simr.cluster.size`.
+
+## Creating simr.jar and buiding SIMR
+
+Download Spark. This needs to be the version that supports the Simr backend scheduler:
+https://github.com/alig/spark
+
+1. Run `sbt/sbt assembly` which creates a giant jumbo jar containing
+all of spark in `assembly/target/scala*/`.
+
+2. Copy this file into the Simr `lib/` directory.
+
+3. Now build and build a jumbo jar of Simr (this will automatically
+include the Spark jumbo jar), creating a jumbo-jumbo jar is done with
+`sbt/sbt assembly`. The jumbo-jumbo jar can be found in
+`target/scala*`.
+
+3. Rename the jumbo-jumbo jar to `simr.jar` and put it in the same
+directory as the runtime script `simr` and follow the instructions
+above to execute simr.
 
 ## How it works (advanced)
 
