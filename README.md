@@ -59,7 +59,7 @@ adjusted by supplying the command line parameter ``--size=<integer>``
 to ``simr`` or setting the Hadoop configuration parameter
 `simr.cluster.size`.
 
-## Creating simr.jar and buiding SIMR
+## Creating simr.jar and building SIMR
 
 Download Spark. This needs to be the version that supports the Simr backend scheduler:
 https://github.com/alig/spark
