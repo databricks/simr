@@ -20,11 +20,7 @@ package org.apache.spark.simr;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.net.*;
 import java.util.Enumeration;
 
 import org.apache.hadoop.conf.Configuration;
@@ -78,8 +74,10 @@ public class Simr {
                 Enumeration<InetAddress> addresses = iface.getInetAddresses();
                 while(addresses.hasMoreElements()) {
                     InetAddress addr = addresses.nextElement();
-                    ip = addr.getHostAddress();
-                    return ip;
+                    if (addr instanceof Inet4Address) {
+                      ip = addr.getHostAddress();
+                      return ip;
+                    }
                 }
             }
         } catch (SocketException e) {

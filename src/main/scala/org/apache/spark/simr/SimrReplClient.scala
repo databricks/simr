@@ -1,7 +1,8 @@
 package org.apache.spark.simr
 
+import scala.collection.JavaConversions
 import java.util.concurrent.TimeoutException
-import java.net.InetAddress
+import java.net.{NetworkInterface, Inet4Address, InetAddress}
 import akka.actor._
 import akka.dispatch.Await
 import akka.event.Logging
@@ -12,6 +13,7 @@ import jline_modified.console.ConsoleReader
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.spark.util.AkkaUtils
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -90,8 +92,20 @@ object SimrReplClient {
   }
 
   def setupActorSystem() {
-    val localIp = InetAddress.getLocalHost.getHostAddress
-    val (as, port) = AkkaUtils.createActorSystem(SIMR_SYSTEM_NAME, localIp, 0)
+    val interfaces = JavaConversions.enumerationAsScalaIterator(NetworkInterface.getNetworkInterfaces)
+    // Akka cannot use IPv6 addresses as identifiers, so we only consider IPv4 addresses
+    var ip4Addr: Option[Inet4Address] = None
+    for (i <- interfaces) {
+      for (s <- JavaConversions.enumerationAsScalaIterator(i.getInetAddresses)) {
+        if (s.isInstanceOf[Inet4Address]) ip4Addr = Some(s.asInstanceOf[Inet4Address])
+      }
+    }
+    val akkaIpAddr =
+      ip4Addr match {
+        case Some(a) => a.getHostAddress
+        case _ => "localhost"
+      }
+    val (as, port) = AkkaUtils.createActorSystem(SIMR_SYSTEM_NAME, akkaIpAddr, 0)
     actorSystem = as
   }
 
