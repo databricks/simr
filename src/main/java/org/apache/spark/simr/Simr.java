@@ -38,6 +38,7 @@ public class Simr {
     private FileSystem fs;
 
     private static final String ELECTIONDIR = "election"; // Directory used to do master election
+    private static final String UNIQUEDIR = "unique"; // Directory used to do master election
     private static final String DRIVERURL = "driverurl";  // File used to store Spark driver URL
     static final String SHELLURL = "shellurl";  // File used to store Spark driver URL
 
@@ -205,6 +206,29 @@ public class Simr {
         return myTaskId.equals(firstMapperId);
     }
 
+    public boolean isUnique() throws IOException {
+        Configuration conf = context.getConfiguration();
+        FileSystem fs = FileSystem.get(conf);
+
+        String uniqueDirName = conf.get("simr_tmp_dir") + "/" + UNIQUEDIR;
+
+        try {
+            fs.mkdirs(new Path(uniqueDirName));  // create unique directory that contains IP address files
+        } catch (Exception ex) {}
+
+        Path myIpFile = new Path(uniqueDirName + "/" + getLocalIP());
+
+        // try to create the IP file. If it exists and IOException is thrown
+        // because an executor is already running on this machine
+        try {
+            FSDataOutputStream outf = fs.create(myIpFile, false);
+            outf.close();
+            return true;
+        } catch (IOException ex) {
+            return false;
+        }
+    }
+
     public void run() throws IOException {
         if (isMaster()) {
             if (conf.get("simr_shell").toLowerCase().equals("true"))
@@ -212,7 +236,13 @@ public class Simr {
             else
                 startMaster();
         } else {
-            startWorker();
+            if (conf.get("simr_unique").toLowerCase().equals("true")) {
+                if (isUnique()) {
+                    startWorker();
+                }
+            } else {
+                startWorker();
+            }
         }
     }
 }
