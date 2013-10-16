@@ -37,7 +37,7 @@ class SimrInputFormat extends InputFormat<Text, Text> {
      */
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
-        int clusterSize = Integer.parseInt(conf.get("simr_cluster_size"));
+        int clusterSize = Integer.parseInt(conf.get("simr_cluster_slots"));
         InputSplit[] result = new InputSplit[clusterSize];
 
         for(int i=0; i < result.length; ++i) {

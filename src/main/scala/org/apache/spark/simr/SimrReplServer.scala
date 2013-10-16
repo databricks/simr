@@ -1,21 +1,5 @@
 package org.apache.spark.simr
 
-import java.io._
-
-import scala.concurrent.ops._
-
-import akka.actor._
-import akka.event.Logging
-import akka.remote.RemoteActorRefProvider
-import akka.util.Duration
-
-import com.typesafe.config.ConfigFactory
-
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{Path, FileSystem}
-
-import org.apache.spark.repl.SparkILoop
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -32,6 +16,18 @@ import org.apache.spark.repl.SparkILoop
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import java.io.{PrintWriter, InputStreamReader, PipedReader, PipedWriter, BufferedReader, BufferedWriter,
+       PipedInputStream, PipedOutputStream, Reader}
+import scala.concurrent.ops.spawn
+import akka.event.Logging
+import akka.remote.RemoteActorRefProvider
+import akka.util.Duration
+import akka.actor.{ActorSystem, Props, ExtendedActorSystem, PoisonPill, ActorRef, Actor}
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.spark.repl.SparkILoop
+import org.apache.spark.util.AkkaUtils
 
 case class InitClient(serverUrl: String)
 case class NewClient()
@@ -117,7 +113,7 @@ class SimrReplServer(simrUrl: String) extends Actor {
     try {
       while (input.ready()) {
         val size = input.read(buf, 0, MAX_MSG)
-        if (size >0 ) {
+        if (size > 0) {
           client ! ReplOutput(buf, size, outType)
           //          prevReplStdout.write(buf, 0, size)
         }
@@ -173,6 +169,7 @@ object SimrReplServer {
   }
 
   def setupActorSystem(hostname: String) {
+    System.setProperty("spark.akka.logLifecycleEvents", "true")
     val (as, port) = AkkaUtils.createActorSystem(SIMR_SYSTEM_NAME, hostname, 0)
     actorSystem = as
   }

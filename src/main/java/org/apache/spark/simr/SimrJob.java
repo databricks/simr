@@ -92,11 +92,16 @@ public class SimrJob {
         String[] args = cmd.getArgs();
 
         if ( (!cmd.containsCommand("shell") && args.length < 4) || (cmd.containsCommand("shell") && args.length < 1) ) {
-            System.err.println("Usage: SimrJob --shell <out_dir>");
-            System.err.println("Usage: SimrJob <out_dir> <your_jar_file> <main_class> <your_params>");
+            System.err.println("Usage: SimrJob --shell <out_dir> [<optional>]");
+            System.err.println("Usage: SimrJob <out_dir> <your_jar_file> <main_class> <your_params> [<optional>]");
             System.err.println("\n  --shell launches a Spark shell in the cluster with a remote interface on this node");
             System.err.println("  <your_params> will be passed to your <main_class>");
-            System.err.println("  The string %spark_url% will be replaced with the SPARK master URL");
+            System.err.println("  The string %spark_url% will be replaced with the SPARK master URL\n");
+            System.err.println("<optional> SIMR has several optional parameters, these include:\n");
+            System.err.println("  --slots=<num>      Requests num slots on the cluster. Needs to be at least 2.");
+            System.err.println("                     The default is the number of task trackers in the cluster. ");
+            System.err.println("  --interface=<num>  Spark driver will bind to a particular network interface number.");
+            System.err.println("                     The default is the first interface, e.g. --interface=0.");
             System.exit(1);
         }
 
@@ -156,22 +161,31 @@ public class SimrJob {
 
         int clusterSize = -1;
 
-        if (cmd.getIntValue("size") != null) {
-            clusterSize = cmd.getIntValue("size");
-        } else if (conf.get("simr.cluster.size") != null) {
-            clusterSize = Integer.parseInt(conf.get("simr.cluster.size"));
+        if (cmd.getIntValue("slots") != null) {
+            clusterSize = cmd.getIntValue("slots");
+        } else if (conf.get("simr.cluster.slots") != null) {
+            clusterSize = Integer.parseInt(conf.get("simr.cluster.slots"));
         } else {
             try {
                 ClusterSizeJob clusterSizeJob = new ClusterSizeJob();
                 ToolRunner.run(new Configuration(), clusterSizeJob, args);
-                clusterSize = max(clusterSizeJob.getClusterSize(), 2);
+                clusterSize = Math.max(clusterSizeJob.getClusterSize(), 2);
             } catch (Exception ex) {
                 System.err.println("Couldn't find out cluster size.\n\n");
                 ex.printStackTrace();
             }
         }
 
-        conf.set("simr_cluster_size", Integer.toString(clusterSize));
+        conf.set("simr_cluster_slots", Integer.toString(clusterSize));
+        if (clusterSize < 2)
+            System.err.println("WARNING! SIMR needs to run on at least 2 slots to work (1 driver + 1 executor)\n" +
+                    "You can manually set the slot size with --slot=<integer>");
+
+        int iface = 0;
+        if (cmd.getIntValue("interface") != null) {
+            iface = cmd.getIntValue("interface");
+        }
+        conf.setInt("simr_interface", iface);
 
         if (!cmd.containsCommand("shell")) {
             String jar_file = args[1];
@@ -231,7 +245,7 @@ public class SimrJob {
                 " (__  ) / / / / / / /    \n" +
                 "/____/_/_/ /_/ /_/_/      version " + SIMRVER + "\n");
 
-        System.err.println("Starting a SIMR cluster of size " + conf.get("simr_cluster_size"));
+        System.err.println("Requesting a SIMR cluster with " + conf.get("simr_cluster_slots") + " slots");
 
         Job job = setupJob(conf);
 

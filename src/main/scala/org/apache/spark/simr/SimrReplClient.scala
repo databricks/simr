@@ -105,6 +105,7 @@ object SimrReplClient {
         case Some(a) => a.getHostAddress
         case _ => "localhost"
       }
+    System.setProperty("spark.akka.logLifecycleEvents", "true")
     val (as, port) = AkkaUtils.createActorSystem(SIMR_SYSTEM_NAME, akkaIpAddr, 0)
     actorSystem = as
   }

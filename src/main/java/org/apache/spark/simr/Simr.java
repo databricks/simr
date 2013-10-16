@@ -61,8 +61,11 @@ public class Simr {
      * @return The IP of the first network interface on this machine as a string, null in the case
      * of an exception from the underlying network interface.
      */
-    public static String getLocalIP() {
+    public String getLocalIP() {
         String ip;
+        int pickIfaceNum = conf.getInt("simr_interface", 0);
+
+        int currIface = 0;
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             while (interfaces.hasMoreElements()) {
@@ -71,12 +74,14 @@ public class Simr {
                 if (iface.isLoopback() || !iface.isUp())
                     continue;
 
-                Enumeration<InetAddress> addresses = iface.getInetAddresses();
-                while(addresses.hasMoreElements()) {
-                    InetAddress addr = addresses.nextElement();
-                    if (addr instanceof Inet4Address) {
-                      ip = addr.getHostAddress();
-                      return ip;
+                if (currIface++ >= pickIfaceNum) {
+                    Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                    while(addresses.hasMoreElements()) {
+                        InetAddress addr = addresses.nextElement();
+                        if (addr instanceof Inet4Address) {
+                            ip = addr.getHostAddress();
+                            return ip;
+                        }
                     }
                 }
             }
