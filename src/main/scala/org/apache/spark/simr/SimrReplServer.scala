@@ -173,17 +173,8 @@ object SimrReplServer {
   }
 
   def setupActorSystem(hostname: String) {
-    val akkaConfig = ConfigFactory.parseString(
-      """
-      akka.daemonic = on
-      akka.actor.provider = "akka.remote.RemoteActorRefProvider"
-      akka.remote.transport = "akka.remote.netty.NettyRemoteTransport"
-      akka.loglevel = "DEBUG"
-      akka.remote.netty.hostname = "%s"
-      akka.remote.netty.port = %d
-      akka.remote.untrusted-mode = "on"
-      """.format(hostname, 0))
-    actorSystem = ActorSystem(SIMR_SYSTEM_NAME, akkaConfig)
+    val (as, port) = AkkaUtils.createActorSystem(SIMR_SYSTEM_NAME, hostname, 0)
+    actorSystem = as
   }
 
   def writeReplUrl() {
@@ -201,7 +192,6 @@ object SimrReplServer {
   }
 
   def main(args: Array[String]) {
-    println("Starting debug ver 0.1")
     parseParams(args)
     setupActorSystem(hostname)
     val server = actorSystem.actorOf(Props(new SimrReplServer(simrUrl)), "SimrReplServer")

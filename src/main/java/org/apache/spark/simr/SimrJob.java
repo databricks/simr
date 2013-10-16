@@ -43,7 +43,7 @@ import org.apache.hadoop.util.ToolRunner;
 public class SimrJob {
     private static final String SPARKJAR = "spark.jar"; // Spark assembly jar
     private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SimrJob
-    private static final String SIMRVER = "0.5";
+    private static final String SIMRVER = "0.6";
     CmdLine cmd;
 
     public SimrJob(String[] args) {
@@ -164,7 +164,7 @@ public class SimrJob {
             try {
                 ClusterSizeJob clusterSizeJob = new ClusterSizeJob();
                 ToolRunner.run(new Configuration(), clusterSizeJob, args);
-                clusterSize = clusterSizeJob.getClusterSize();
+                clusterSize = max(clusterSizeJob.getClusterSize(), 2);
             } catch (Exception ex) {
                 System.err.println("Couldn't find out cluster size.\n\n");
                 ex.printStackTrace();
