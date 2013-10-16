@@ -65,4 +65,4 @@ fi
 fsize=$(ls -1hl $SIMRJAR | cut -d " " -f 5)
 echo "Uploading $SIMRJAR ($fsize) to the Hadoop cluster, this may take a while"
 
-HADOOP_CLASSPATH=$SIMRJAR exec $HADOOPBIN jar $SIMRJAR $OUTDIR $USERJAR $@
+HADOOP_USER_CLASSPATH_FIRST=1 HADOOP_CLASSPATH=$SIMRJAR exec $HADOOPBIN jar $SIMRJAR $OUTDIR $USERJAR $@
