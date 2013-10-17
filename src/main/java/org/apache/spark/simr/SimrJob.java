@@ -205,18 +205,10 @@ public class SimrJob {
     }
 
     public Job setupJob(Configuration conf) throws Exception {
-        String jars = SPARKJAR;
 
+        String[] jarArgs = new String[]{};
         if (!cmd.containsCommand("shell"))
-            jars += "," + conf.get("simr_jar_file");
-
-        String[] jarArgs = new String[]{"-libjars", jars}; // hadoop ships jars
-        //debug
-        if (!cmd.containsCommand("shell"))
-            jarArgs = new String[]{"-libjars", conf.get("simr_jar_file") + "," + SPARKJAR};
-        else
-            jarArgs = new String[]{"-libjars", SPARKJAR};
-        // end debug
+            jarArgs = new String[]{"-libjars", conf.get("simr_jar_file")};
 
         String[] otherArgs = new GenericOptionsParser(conf, jarArgs).getRemainingArgs();
 
@@ -253,14 +245,9 @@ public class SimrJob {
         if (cmd.containsCommand("shell")) {
             job.submit();
 
-            URLClassLoader mainCL = new URLClassLoader(new URL[]{new File("spark.jar").toURI().toURL()},
-                                this.getClass().getClassLoader());
-            Class myClass = Class.forName("org.apache.spark.simr.SimrReplClient", true, mainCL);
-            Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
             String[] program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL};
-            Object result = method.invoke(null, new Object[]{program_args});
 
-//            org.apache.spark.simr.SimrReplClient.main(program_args);
+            org.apache.spark.simr.SimrReplClient.main(program_args);
         } else {
             retBool = job.waitForCompletion(true);
         }
