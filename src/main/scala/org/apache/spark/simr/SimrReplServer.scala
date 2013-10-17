@@ -46,6 +46,8 @@ case class ShutdownSimr()
 class SimrReplServer(simrUrl: String) extends Actor {
   val log = Logging(context.system, this)
 
+  var interp: SparkILoop = null
+
   val MAX_MSG: Int = 10*1024
   val buf: Array[Char] = new Array[Char](MAX_MSG)
 
@@ -90,7 +92,7 @@ class SimrReplServer(simrUrl: String) extends Actor {
     }
 
     spawn { // in a separate thread, otherwise in/out/err piped streams might overflow due to no reader draining them
-      val interp = new SparkILoop(bufIn, new PrintWriter(bufOut), simrUrl)
+      interp = new SparkILoop(bufIn, new PrintWriter(bufOut), simrUrl)
 
       org.apache.spark.repl.Main.interp = interp
       interp.setPrompt("\n" + SimrReplClient.SIMR_PROMPT)
@@ -146,6 +148,7 @@ class SimrReplServer(simrUrl: String) extends Actor {
       relayInput(replOut, BasicOutputType())
 
     case ShutdownSimr() =>
+      interp.command("sc.stop()")
       self ! PoisonPill
       context.system.shutdown()
   }

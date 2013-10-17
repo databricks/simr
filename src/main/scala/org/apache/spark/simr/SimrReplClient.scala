@@ -158,9 +158,9 @@ object SimrReplClient {
         try {
           val result = Await.result(future, timeout.duration).asInstanceOf[String]
         } catch { case ex: TimeoutException => Unit }
-      } else
-        client ! ShutdownSimr()
-    } while (line != null)
+      }
+    } while (line != null && line.stripLineEnd != "exit")
+    client ! ShutdownSimr()
   }
 
   def main(args: Array[String]) {

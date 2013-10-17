@@ -76,6 +76,7 @@ public class Simr {
 
                 if (currIface++ >= pickIfaceNum) {
                     Enumeration<InetAddress> addresses = iface.getInetAddresses();
+
                     while(addresses.hasMoreElements()) {
                         InetAddress addr = addresses.nextElement();
                         if (addr instanceof Inet4Address) {
