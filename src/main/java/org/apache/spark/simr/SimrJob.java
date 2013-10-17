@@ -213,9 +213,9 @@ public class SimrJob {
         String[] jarArgs = new String[]{"-libjars", jars}; // hadoop ships jars
         //debug
         if (!cmd.containsCommand("shell"))
-            jarArgs = new String[]{"-libjars", conf.get("simr_jar_file")};
+            jarArgs = new String[]{"-libjars", SPARKJAR, conf.get("simr_jar_file")};
         else
-            jarArgs = new String[]{};
+            jarArgs = new String[]{"-libjars", SPARKJAR};
         // end debug
 
         String[] otherArgs = new GenericOptionsParser(conf, jarArgs).getRemainingArgs();
