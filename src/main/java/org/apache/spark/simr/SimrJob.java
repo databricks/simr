@@ -253,15 +253,13 @@ public class SimrJob {
         if (cmd.containsCommand("shell")) {
             job.submit();
 
-            String[] program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL};
-
-            URL sparkJar = new File(SPARKJAR).toURI().toURL();
-            System.err.println("Spark JAR URL: " + sparkJar);
-            URLClassLoader mainCL = new URLClassLoader(new URL[]{sparkJar});
-//            ,this.getClass().getClassLoader());
-            Class myClass = Class.forName("org.apache.spark.simr.SimrReplClient", true, mainCL);
+            URLClassLoader mainCL = new URLClassLoader(new URL[]{new File("spark.jar").toURI().toURL()},
+                                this.getClass().getClassLoader());
+            Class myClass = Class.forName("org.apache.spark.repl.SimrReplClient", true, mainCL);
             Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
+            String[] program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL};
             Object result = method.invoke(null, new Object[]{program_args});
+
 //            org.apache.spark.simr.SimrReplClient.main(program_args);
         } else {
             retBool = job.waitForCompletion(true);
