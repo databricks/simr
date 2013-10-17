@@ -21,3 +21,9 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
     case x => old(x)
   }
 }
+
+excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
+  cp filter {_.data.getName == "spark.jar"}
+}
+
+jarName in assembly := "simr.jar"
