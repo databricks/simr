@@ -187,6 +187,12 @@ public class SimrJob {
         }
         conf.setInt("simr_interface", iface);
 
+        if (cmd.containsCommand("unique")) {
+            conf.set("simr_unique", "true");
+        } else {
+            conf.set("simr_unique", "false");
+        }
+
         if (!cmd.containsCommand("shell")) {
             String jar_file = args[1];
             String main_class = args[2];
