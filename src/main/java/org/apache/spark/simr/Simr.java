@@ -178,9 +178,6 @@ public class Simr {
     }
 
     public boolean isMaster() throws IOException {
-        Configuration conf = context.getConfiguration();
-        FileSystem fs = FileSystem.get(conf);
-
         String electionDirName = conf.get("simr_tmp_dir") + "/" + ELECTIONDIR;
 
         try {
@@ -207,9 +204,6 @@ public class Simr {
     }
 
     public boolean isUnique() throws IOException {
-        Configuration conf = context.getConfiguration();
-        FileSystem fs = FileSystem.get(conf);
-
         String uniqueDirName = conf.get("simr_tmp_dir") + "/" + UNIQUEDIR;
 
         try {
@@ -230,19 +224,16 @@ public class Simr {
     }
 
     public void run() throws IOException {
+        boolean shellFlag = conf.get("simr_shell").toLowerCase().equals("true");
+        boolean uniqueFlag = conf.get("simr_unique").toLowerCase().equals("true");
+
         if (isMaster()) {
-            if (conf.get("simr_shell").toLowerCase().equals("true"))
+            if (shellFlag)
                 startShell();
             else
                 startMaster();
-        } else {
-            if (conf.get("simr_unique").toLowerCase().equals("true")) {
-                if (isUnique()) {
-                    startWorker();
-                }
-            } else {
-                startWorker();
-            }
+        } else if (!uniqueFlag || uniqueFlag && isUnique()) {
+            startWorker();
         }
     }
 }
