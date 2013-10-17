@@ -257,8 +257,8 @@ public class SimrJob {
 
             URL sparkJar = new File(SPARKJAR).toURI().toURL();
             System.err.println("Spark JAR URL: " + sparkJar);
-            URLClassLoader mainCL = new URLClassLoader(new URL[]{sparkJar},
-                    this.getClass().getClassLoader());
+            URLClassLoader mainCL = new URLClassLoader(new URL[]{sparkJar});
+//            ,this.getClass().getClassLoader());
             Class myClass = Class.forName("org.apache.spark.simr.SimrReplClient", true, mainCL);
             Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
             Object result = method.invoke(null, new Object[]{program_args});
