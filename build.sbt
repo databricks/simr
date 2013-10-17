@@ -23,7 +23,7 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
 }
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
-  cp filter {_.data.getName == "spark.jar"}
+  cp filter {_.data.getName == "spark-assembly.jar"}
 }
 
 jarName in assembly := "simr.jar"
