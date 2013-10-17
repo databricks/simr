@@ -28,6 +28,7 @@ import java.net.SocketException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -122,15 +123,21 @@ public class Simr {
         String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
         String main_class = conf.get("simr_main_class");
         String rest_args = conf.get("simr_rest_args");
+        String out_dir = conf.get("simr_out_dir");
+
+        String[] repl_args = new String[]{
+            conf.get("simr_tmp_dir") + "/" + SHELLURL,
+            getLocalIP(),
+            master_url,
+            "--jar",
+            out_dir,
+            main_class};
 
         String[] program_args = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
 
         try {
-            redirectOutput("driver");
-            URLClassLoader mainCL = new URLClassLoader(new URL[]{}, this.getClass().getClassLoader());
-            Class myClass = Class.forName(main_class, true, mainCL);
-            Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
-            Object result = method.invoke(null, new Object[]{program_args});
+            org.apache.spark.simr.SimrReplServer.main(
+                    (String[]) ArrayUtils.addAll(repl_args, program_args));
         } catch (Exception ex) { System.out.println(ex); }
     }
 

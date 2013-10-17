@@ -18,13 +18,14 @@ package org.apache.spark.simr
  */
 
 import java.io.{PrintWriter, InputStreamReader, PipedReader, PipedWriter, BufferedReader, BufferedWriter,
-       PipedInputStream, PipedOutputStream, Reader}
+       PipedInputStream, PipedOutputStream, Reader, PrintStream, OutputStreamWriter}
+import java.net.{URL, URLClassLoader}
 import scala.concurrent.ops.spawn
 import akka.remote.RemoteActorRefProvider
 import akka.util.Duration
 import akka.actor.{ActorSystem, Props, ExtendedActorSystem, PoisonPill, ActorRef, Actor}
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.hadoop.fs.{Path, FileSystem, FSDataOutputStream}
 import org.apache.spark.repl.SparkILoop
 import org.apache.spark.util.AkkaUtils
 import org.apache.spark.Logging
@@ -42,6 +43,7 @@ case class StderrOutputType() extends OutputType
 case class ReplOutput(buf: Array[Char], size: Int, outType: OutputType)
 case class ReplInputLine(line: String)
 case class ShutdownSimr()
+case class ShutdownClient()
 
 class SimrReplServer(simrUrl: String) extends Actor with Logging {
 
@@ -63,14 +65,6 @@ class SimrReplServer(simrUrl: String) extends Actor with Logging {
     val BUFSIZE = 1024*100;
     logInfo("Starting SimrReplServer")
 
-    val pr = new PipedReader(BUFSIZE)
-    replIn.connect(pr)
-    val bufIn = new BufferedReader(pr, BUFSIZE)
-
-    val pw = new PipedWriter()
-    replOut.connect(pw)
-    val bufOut = new BufferedWriter(pw, BUFSIZE)
-
     val os = new PipedOutputStream()
     val is = new PipedInputStream(BUFSIZE)
     is.connect(os)
@@ -84,6 +78,18 @@ class SimrReplServer(simrUrl: String) extends Actor with Logging {
     replStderr = new InputStreamReader(iserr)
     prevReplStderr = new PrintWriter(scala.Console.err)
     scala.Console.setErr(oserr)
+
+    runJob(BUFSIZE)
+  }
+
+  def runJob(BUFSIZE: Int) {
+    val pr = new PipedReader(BUFSIZE)
+    replIn.connect(pr)
+    val bufIn = new BufferedReader(pr, BUFSIZE)
+
+    val pw = new PipedWriter()
+    replOut.connect(pw)
+    val bufOut = new BufferedWriter(pw, BUFSIZE)
 
     lazy val urls = java.lang.Thread.currentThread.getContextClassLoader match {
       case cl: java.net.URLClassLoader => cl.getURLs.toList
@@ -117,6 +123,7 @@ class SimrReplServer(simrUrl: String) extends Actor with Logging {
         val size = input.read(buf, 0, MAX_MSG)
         if (size > 0) {
           client ! ReplOutput(buf, size, outType)
+          storeInput(buf, size, outType)
           //          prevReplStdout.write(buf, 0, size)
         }
       }
@@ -127,6 +134,8 @@ class SimrReplServer(simrUrl: String) extends Actor with Logging {
         client ! ReplOutput(err.toCharArray, err.size, StderrOutputType())
     }
   }
+
+  def storeInput(buf: Array[Char], size: Int, outType: OutputType) {}
 
   def receive = {
     case NewClient =>
@@ -158,21 +167,112 @@ class SimrReplServer(simrUrl: String) extends Actor with Logging {
   }
 }
 
+class JarRunner(simrUrl: String, out_dir: String, main_class: String, program_args: Array[String]) extends SimrReplServer(simrUrl) {
+  val conf = new Configuration()
+  val fs = FileSystem.get(conf)
+
+  var stdout: InputStreamReader = null
+  var stderr: InputStreamReader = null
+  val stdoutFile: BufferedWriter  = new BufferedWriter(new OutputStreamWriter(fs.create(
+          new Path(out_dir + "/driver.stdout"))));
+  val stderrFile: BufferedWriter  = new BufferedWriter(new OutputStreamWriter(fs.create(
+          new Path(out_dir + "/driver.stderr"))));
+
+  def specificMessageHandler: Receive = {
+    case FlushMessages() if (client != null) =>
+      relayInput(replStdout, StdoutOutputType())
+      relayInput(replStderr, StderrOutputType())
+      relayInput(stdout, StdoutOutputType())
+      relayInput(stderr, StderrOutputType())
+
+    case ShutdownSimr() =>
+      stdoutFile.close()
+      stderrFile.close()
+      client ! ShutdownClient()
+      self ! PoisonPill
+      context.system.shutdown()
+  }
+
+  override def receive = specificMessageHandler orElse super.receive
+
+  override def storeInput(buf: Array[Char], size: Int, outType: OutputType) {
+    val out = outType match {
+      case StdoutOutputType() => stdoutFile
+      case StderrOutputType() => stderrFile
+      case BasicOutputType() => stdoutFile
+    }
+    out.write(buf, 0, size)
+  }
+
+  override def runJob(BUFSIZE: Int) {
+    val stdoutIS: PipedInputStream = new PipedInputStream();
+    val stdoutOS: PipedOutputStream = new PipedOutputStream(stdoutIS);
+    val stderrIS: PipedInputStream = new PipedInputStream();
+    val stderrOS: PipedOutputStream = new PipedOutputStream(stderrIS);
+
+    System.setOut(new PrintStream(stdoutOS));
+    System.setErr(new PrintStream(stderrOS));
+
+    stdout = new InputStreamReader(stdoutIS);
+    stderr = new InputStreamReader(stderrIS);
+
+    spawn {
+      val mainCL: URLClassLoader = new URLClassLoader(Array[URL](), this.getClass().getClassLoader());
+      val myClass = Class.forName(main_class, true, mainCL);
+      val methods = myClass.getDeclaredMethods()
+
+      for (method <- methods) {
+        if (method.getName().equals("main")) {
+          try {
+            method.invoke(null, program_args.asInstanceOf[Array[Object]])
+          } catch {
+            case ex =>
+              val err = "Reflection Exception:\n" +
+                ex.toString + "\n" + ex.getStackTraceString
+              println(err)
+          }
+        }
+      }
+      self ! ShutdownSimr()
+    }
+  }
+
+}
+
 object SimrReplServer extends Logging {
   val SIMR_SYSTEM_NAME = "SimrRepl"
   var hdfsFile: String = null
   var hostname: String = null
   var simrUrl: String = null
   var actorSystem: ActorSystem = null
+  var shellMode: Boolean = true
+  var out_dir: String = null
+  var main_class: String = null
+  var program_args: Array[String] = null
 
-  def parseParams(args: Array[String]) {
-    if (args.length != 3) {
+  def parseParams(raw_args: Array[String]) {
+    val cmd = new CmdLine(raw_args)
+    cmd.parse()
+    val args = cmd.getArgs()
+
+    if (args.length == 3 && !cmd.containsCommand("jar")) {
+      hdfsFile = args(0)
+      hostname = args(1)
+      simrUrl = args(2)
+      shellMode = true
+    } else if (args.length >= 5 && cmd.containsCommand("jar")) {
+      hdfsFile = args(0)
+      hostname = args(1)
+      simrUrl = args(2)
+      out_dir = args(3)
+      main_class = args(4)
+      program_args = args.slice(5, args.length)
+      shellMode = false
+    } else {
       println("Usage: SimrReplServer hdfs_file hostname simrUrl")
+      println("       SimrReplServer --jar hdfs_file hostname simrUrl hdfs_tmp_dir main_class [arg1] [arg2] ...")
       System.exit(1)
     }
-    hdfsFile = args(0)
-    hostname = args(1)
-    simrUrl = args(2)
   }
 
   def setupActorSystem(hostname: String) {
@@ -206,7 +306,13 @@ object SimrReplServer extends Logging {
   def main(args: Array[String]) {
     parseParams(args)
     setupActorSystem(hostname)
-    val server = actorSystem.actorOf(Props(new SimrReplServer(simrUrl)), "SimrReplServer")
+
+    if (shellMode) {
+      val server = actorSystem.actorOf(Props(new SimrReplServer(simrUrl)), "SimrReplServer")
+    } else {
+      val server = actorSystem.actorOf(Props(new JarRunner(simrUrl, out_dir, main_class, program_args)), "SimrReplServer")
+    }
+
     writeReplUrl()
 
     actorSystem.awaitTermination()

@@ -75,6 +75,10 @@ class SimrReplClient extends Actor with Logging {
     case ShutdownSimr() =>
       logInfo("Sending shutdown to server")
       server ! ShutdownSimr()
+
+    case ShutdownClient() =>
+      self ! PoisonPill
+      context.system.shutdown()
   }
 }
 
@@ -84,13 +88,20 @@ object SimrReplClient extends Logging {
 
   var hdfsFile: String = null
   var actorSystem: ActorSystem = null
+  var readonly: Boolean = false
 
-  def parseParams(args: Array[String]) {
+  def parseParams(raw_args: Array[String]) {
+    val cmd = new CmdLine(raw_args)
+    cmd.parse()
+    val args = cmd.getArgs()
+
     if (args.length != 1) {
       println("Usage: SimrReplClient hdfs_file")
       System.exit(1)
     }
     hdfsFile = args(0)
+    if (cmd.containsCommand("readonly"))
+      readonly = true
   }
 
   def setupActorSystem() {
@@ -175,10 +186,14 @@ object SimrReplClient extends Logging {
     val replUrl = getReplUrl()
     setupActorSystem()
     val client = actorSystem.actorOf(Props[SimrReplClient], "SimrReplClient")
+    println (replUrl)
     client ! InitClient(replUrl)
 
-    readLoop(client)
-
-    actorSystem.shutdown()
+    if (readonly) {
+      actorSystem.awaitTermination()
+    } else {
+      readLoop(client)
+      actorSystem.shutdown()
+    }
   }
 }

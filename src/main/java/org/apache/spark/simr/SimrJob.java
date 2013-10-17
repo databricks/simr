@@ -255,6 +255,12 @@ public class SimrJob {
 
             org.apache.spark.simr.SimrReplClient.main(program_args);
         } else {
+            job.submit();
+
+            String[] program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL, "--readonly"};
+
+            org.apache.spark.simr.SimrReplClient.main(program_args);
+
             retBool = job.waitForCompletion(true);
         }
 
