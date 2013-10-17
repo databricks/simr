@@ -184,11 +184,19 @@ object SimrReplServer {
 
     println("Simr REPL running here: " + SimrReplUrl)
 
+    val tempPath = new Path(hdfsFile + "_tmp")
+    val filePath = new Path(hdfsFile)
+
     val conf = new Configuration()
     val fs = FileSystem.get(conf)
-    val file = fs.create(new Path(hdfsFile), true)
-    file.writeUTF(SimrReplUrl)
-    file.close()
+
+    // Create temporary file to prevent race condition where ReplClient gets empty url file
+    val temp = fs.create(tempPath, true)
+    temp.writeUTF(SimrReplUrl)
+    temp.close()
+
+    // "Atomic" rename
+    fs.rename(tempPath, filePath)
   }
 
   def main(args: Array[String]) {
