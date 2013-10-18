@@ -28,6 +28,8 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.spark.repl.SparkILoop
 import org.apache.spark.util.AkkaUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 case class InitClient(serverUrl: String)
 case class NewClient()
@@ -92,6 +94,7 @@ class SimrReplServer(simrUrl: String) extends Actor {
     }
 
     spawn { // in a separate thread, otherwise in/out/err piped streams might overflow due to no reader draining them
+      log.debug("Launching Spark shell in separate thread")
       interp = new SparkILoop(bufIn, new PrintWriter(bufOut), simrUrl)
 
       org.apache.spark.repl.Main.interp = interp
@@ -130,24 +133,28 @@ class SimrReplServer(simrUrl: String) extends Actor {
 
   def receive = {
     case NewClient =>
-      println("Connected to client")
+      log.info("Connected to client")
       start()
       client = sender
       val cancellable =
         context.system.scheduler.schedule(Duration("0 ms"), Duration("10 ms"), self, FlushMessages())
 
     case NewCommand(str: String) =>
+      log.debug("Recieved input from client: " + str)
       replIn.write(str)
 
     case ReplInputLine(line: String) =>
+      log.debug("Recieved input from client: " + line)
       replIn.write(line)
 
     case FlushMessages() if (client != null) =>
+      log.debug("Flushing output to client")
       relayInput(replStdout, StdoutOutputType())
       relayInput(replStderr, StderrOutputType())
       relayInput(replOut, BasicOutputType())
 
     case ShutdownSimr() =>
+      log.info("Shutting down")
       interp.command("sc.stop()")
       self ! PoisonPill
       context.system.shutdown()
@@ -160,6 +167,7 @@ object SimrReplServer {
   var hostname: String = null
   var simrUrl: String = null
   var actorSystem: ActorSystem = null
+  val log: Logger = LoggerFactory.getLogger(classOf[SimrReplClient])
 
   def parseParams(args: Array[String]) {
     if (args.length != 3) {
@@ -182,7 +190,7 @@ object SimrReplServer {
     val port: Int = provider.asInstanceOf[RemoteActorRefProvider].transport.address.port.get
     val SimrReplUrl = "akka://%s@%s:%d/user/SimrReplServer".format(SIMR_SYSTEM_NAME, hostname, port)
 
-    println("Simr REPL running here: " + SimrReplUrl)
+    log.info("Simr REPL running here: " + SimrReplUrl)
 
     val conf = new Configuration()
     val fs = FileSystem.get(conf)

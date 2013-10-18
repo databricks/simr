@@ -13,6 +13,8 @@ import jline_modified.console.ConsoleReader
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.spark.util.AkkaUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -43,11 +45,12 @@ class SimrReplClient extends Actor {
 
   def receive = {
     case NewCommand(str) =>
-      println("client command: " + str)
+      log.debug("client command: " + str)
       server ! NewCommand(str)
 
     case ReplInputLine(line) =>
       //      println("client command: " + str)
+      log.debug("Sending to server: " + line)
       server ! ReplInputLine(line)
       frontCli = sender
       needToReply = true
@@ -58,6 +61,7 @@ class SimrReplClient extends Actor {
       server ! NewClient
 
     case ReplOutput(buf: Array[Char], size: Int, outType: OutputType) =>
+      log.debug("Received repl output")
       val out = outType match {
         case StdoutOutputType() => Console.out
         case StderrOutputType() => Console.err
@@ -72,6 +76,7 @@ class SimrReplClient extends Actor {
 
 
     case ShutdownSimr() =>
+      log.info("Sending shutdown to server")
       server ! ShutdownSimr()
   }
 }
@@ -83,6 +88,8 @@ object SimrReplClient {
   var hdfsFile: String = null
   var actorSystem: ActorSystem = null
 
+  val log: Logger = LoggerFactory.getLogger(classOf[SimrReplClient])
+
   def parseParams(args: Array[String]) {
     if (args.length != 1) {
       println("Usage: SimrReplClient hdfs_file")
@@ -92,6 +99,7 @@ object SimrReplClient {
   }
 
   def setupActorSystem() {
+    log.debug("Setup actor system")
     val interfaces = JavaConversions.enumerationAsScalaIterator(NetworkInterface.getNetworkInterfaces)
     // Akka cannot use IPv6 addresses as identifiers, so we only consider IPv4 addresses
     var ip4Addr: Option[Inet4Address] = None
@@ -111,6 +119,7 @@ object SimrReplClient {
   }
 
   def getReplUrl() = {
+    log.debug("Retrieving repl url from hdfs")
     val conf = new Configuration()
     val fs = FileSystem.get(conf)
 
@@ -120,6 +129,7 @@ object SimrReplClient {
     var foundFile = false
 
     while (!foundFile && tries < MAXTRIES) {
+      log.debug("Attempt: " + tries)
       val fstatArr = fs.listStatus(path)
       if (fstatArr != null && fstatArr.length > 0 && fstatArr(0).getLen > 0) {
         foundFile = true
@@ -130,17 +140,19 @@ object SimrReplClient {
     }
 
     if (tries == MAXTRIES) {
-      println("Couldn't find HDFS file " + hdfsFile)
+      log.warn("Couldn't find HDFS file " + hdfsFile)
       System.exit(1)
     }
 
     var file = fs.open(new Path(hdfsFile))
     val simrReplUrl = file.readUTF()
     file.close()
+    log.debug("ReplUrl: " + simrReplUrl)
     simrReplUrl
   }
 
   def readLoop(client: ActorRef) {
+    log.debug("Starting client loop")
     val console = new ConsoleReader()
 //    console.setPrompt(SimrReplClient.SIMR_PROMPT)
     console.setPrompt("")
