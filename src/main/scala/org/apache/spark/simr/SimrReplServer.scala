@@ -28,8 +28,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.spark.repl.SparkILoop
 import org.apache.spark.util.AkkaUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import java.util.logging.Logger
 
 case class InitClient(serverUrl: String)
 case class NewClient()
@@ -167,7 +166,7 @@ object SimrReplServer {
   var hostname: String = null
   var simrUrl: String = null
   var actorSystem: ActorSystem = null
-  val log: Logger = LoggerFactory.getLogger(classOf[SimrReplClient])
+  val log: Logger = Logger.getLogger("SimrReplServer")
 
   def parseParams(args: Array[String]) {
     if (args.length != 3) {
@@ -200,6 +199,7 @@ object SimrReplServer {
   }
 
   def main(args: Array[String]) {
+    log.info("starting logging")
     parseParams(args)
     setupActorSystem(hostname)
     val server = actorSystem.actorOf(Props(new SimrReplServer(simrUrl)), "SimrReplServer")

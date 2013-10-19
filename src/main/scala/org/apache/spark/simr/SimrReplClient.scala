@@ -13,8 +13,7 @@ import jline_modified.console.ConsoleReader
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.spark.util.AkkaUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import java.util.logging.Logger
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -88,7 +87,7 @@ object SimrReplClient {
   var hdfsFile: String = null
   var actorSystem: ActorSystem = null
 
-  val log: Logger = LoggerFactory.getLogger(classOf[SimrReplClient])
+  val log: Logger = Logger.getLogger("SimrReplClient")
 
   def parseParams(args: Array[String]) {
     if (args.length != 1) {
@@ -99,7 +98,7 @@ object SimrReplClient {
   }
 
   def setupActorSystem() {
-    log.debug("Setup actor system")
+    log.fine("Setup actor system")
     val interfaces = JavaConversions.enumerationAsScalaIterator(NetworkInterface.getNetworkInterfaces)
     // Akka cannot use IPv6 addresses as identifiers, so we only consider IPv4 addresses
     var ip4Addr: Option[Inet4Address] = None
@@ -119,7 +118,7 @@ object SimrReplClient {
   }
 
   def getReplUrl() = {
-    log.debug("Retrieving repl url from hdfs")
+    log.fine("Retrieving repl url from hdfs")
     val conf = new Configuration()
     val fs = FileSystem.get(conf)
 
@@ -129,7 +128,7 @@ object SimrReplClient {
     var foundFile = false
 
     while (!foundFile && tries < MAXTRIES) {
-      log.debug("Attempt: " + tries)
+      log.fine("Attempt: " + tries)
       val fstatArr = fs.listStatus(path)
       if (fstatArr != null && fstatArr.length > 0 && fstatArr(0).getLen > 0) {
         foundFile = true
@@ -140,19 +139,19 @@ object SimrReplClient {
     }
 
     if (tries == MAXTRIES) {
-      log.warn("Couldn't find HDFS file " + hdfsFile)
+      log.warning("Couldn't find HDFS file " + hdfsFile)
       System.exit(1)
     }
 
     var file = fs.open(new Path(hdfsFile))
     val simrReplUrl = file.readUTF()
     file.close()
-    log.debug("ReplUrl: " + simrReplUrl)
+    log.fine("ReplUrl: " + simrReplUrl)
     simrReplUrl
   }
 
   def readLoop(client: ActorRef) {
-    log.debug("Starting client loop")
+    log.fine("Starting client loop")
     val console = new ConsoleReader()
 //    console.setPrompt(SimrReplClient.SIMR_PROMPT)
     console.setPrompt("")
