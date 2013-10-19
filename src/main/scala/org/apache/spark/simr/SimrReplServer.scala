@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.spark.repl.SparkILoop
 import org.apache.spark.util.AkkaUtils
 import java.util.logging.Logger
+import java.util.logging.Level
 
 case class InitClient(serverUrl: String)
 case class NewClient()
@@ -45,7 +46,7 @@ case class ReplInputLine(line: String)
 case class ShutdownSimr()
 
 class SimrReplServer(simrUrl: String) extends Actor {
-  val log = Logging(context.system, this)
+  val akkaLog = Logging(context.system, this)
 
   var interp: SparkILoop = null
 
@@ -63,7 +64,7 @@ class SimrReplServer(simrUrl: String) extends Actor {
 
   def start() {
     val BUFSIZE = 1024*100;
-    log.info("Starting SimrReplServer")
+    akkaLog.info("Starting SimrReplServer")
 
     val pr = new PipedReader(BUFSIZE)
     replIn.connect(pr)
@@ -93,7 +94,7 @@ class SimrReplServer(simrUrl: String) extends Actor {
     }
 
     spawn { // in a separate thread, otherwise in/out/err piped streams might overflow due to no reader draining them
-      log.debug("Launching Spark shell in separate thread")
+      akkaLog.debug("Launching Spark shell in separate thread")
       interp = new SparkILoop(bufIn, new PrintWriter(bufOut), simrUrl)
 
       org.apache.spark.repl.Main.interp = interp
@@ -132,28 +133,28 @@ class SimrReplServer(simrUrl: String) extends Actor {
 
   def receive = {
     case NewClient =>
-      log.info("Connected to client")
+      akkaLog.info("Connected to client")
       start()
       client = sender
       val cancellable =
         context.system.scheduler.schedule(Duration("0 ms"), Duration("10 ms"), self, FlushMessages())
 
     case NewCommand(str: String) =>
-      log.debug("Recieved input from client: " + str)
+      akkaLog.debug("Recieved input from client: {}", str)
       replIn.write(str)
 
     case ReplInputLine(line: String) =>
-      log.debug("Recieved input from client: " + line)
+      akkaLog.debug("Recieved input from client: {}", line)
       replIn.write(line)
 
     case FlushMessages() if (client != null) =>
-      log.debug("Flushing output to client")
+      akkaLog.debug("Flushing output to client")
       relayInput(replStdout, StdoutOutputType())
       relayInput(replStderr, StderrOutputType())
       relayInput(replOut, BasicOutputType())
 
     case ShutdownSimr() =>
-      log.info("Shutting down")
+      akkaLog.info("Shutting down")
       interp.command("sc.stop()")
       self ! PoisonPill
       context.system.shutdown()
@@ -189,7 +190,7 @@ object SimrReplServer {
     val port: Int = provider.asInstanceOf[RemoteActorRefProvider].transport.address.port.get
     val SimrReplUrl = "akka://%s@%s:%d/user/SimrReplServer".format(SIMR_SYSTEM_NAME, hostname, port)
 
-    log.info("Simr REPL running here: " + SimrReplUrl)
+    log.log(Level.INFO, "Simr REPL running here: " + SimrReplUrl)
 
     val conf = new Configuration()
     val fs = FileSystem.get(conf)
@@ -199,7 +200,6 @@ object SimrReplServer {
   }
 
   def main(args: Array[String]) {
-    log.info("starting logging")
     parseParams(args)
     setupActorSystem(hostname)
     val server = actorSystem.actorOf(Props(new SimrReplServer(simrUrl)), "SimrReplServer")
