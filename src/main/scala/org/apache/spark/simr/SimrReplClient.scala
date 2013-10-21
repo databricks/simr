@@ -5,7 +5,6 @@ import java.util.concurrent.TimeoutException
 import java.net.{NetworkInterface, Inet4Address, InetAddress}
 import akka.actor._
 import akka.dispatch.Await
-import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import akka.util.duration._
@@ -13,6 +12,7 @@ import jline_modified.console.ConsoleReader
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
 import org.apache.spark.util.AkkaUtils
+import org.apache.spark.Logging
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -32,8 +32,7 @@ import org.apache.spark.util.AkkaUtils
  */
 
 
-class SimrReplClient extends Actor {
-  val log = Logging(context.system, this)
+class SimrReplClient extends Actor with Logging {
 
   var server: ActorRef = null
 
@@ -43,21 +42,23 @@ class SimrReplClient extends Actor {
 
   def receive = {
     case NewCommand(str) =>
-      println("client command: " + str)
+      logDebug("client command: " + str)
       server ! NewCommand(str)
 
     case ReplInputLine(line) =>
       //      println("client command: " + str)
+      logDebug("Sending to server: " + line)
       server ! ReplInputLine(line)
       frontCli = sender
       needToReply = true
 
     case InitClient(serverUrl: String) =>
       server = context.actorFor(serverUrl)
-      log.info("connecting to server")
+      logInfo("connecting to server")
       server ! NewClient
 
     case ReplOutput(buf: Array[Char], size: Int, outType: OutputType) =>
+      logDebug("Received repl output")
       val out = outType match {
         case StdoutOutputType() => Console.out
         case StderrOutputType() => Console.err
@@ -72,11 +73,12 @@ class SimrReplClient extends Actor {
 
 
     case ShutdownSimr() =>
+      logInfo("Sending shutdown to server")
       server ! ShutdownSimr()
   }
 }
 
-object SimrReplClient {
+object SimrReplClient extends Logging {
   val SIMR_PROMPT: String = "scala> "
   val SIMR_SYSTEM_NAME = "SimrRepl"
 
@@ -92,6 +94,7 @@ object SimrReplClient {
   }
 
   def setupActorSystem() {
+    logDebug("Setup actor system")
     val interfaces = JavaConversions.enumerationAsScalaIterator(NetworkInterface.getNetworkInterfaces)
     // Akka cannot use IPv6 addresses as identifiers, so we only consider IPv4 addresses
     var ip4Addr: Option[Inet4Address] = None
@@ -111,6 +114,7 @@ object SimrReplClient {
   }
 
   def getReplUrl() = {
+    logDebug("Retrieving repl url from hdfs")
     val conf = new Configuration()
     val fs = FileSystem.get(conf)
 
@@ -120,6 +124,7 @@ object SimrReplClient {
     var foundFile = false
 
     while (!foundFile && tries < MAXTRIES) {
+      logDebug("Attempt: " + tries)
       val fstatArr = fs.listStatus(path)
       if (fstatArr != null && fstatArr.length > 0 && fstatArr(0).getLen > 0) {
         foundFile = true
@@ -130,17 +135,19 @@ object SimrReplClient {
     }
 
     if (tries == MAXTRIES) {
-      println("Couldn't find HDFS file " + hdfsFile)
+      logDebug("Couldn't find HDFS file " + hdfsFile)
       System.exit(1)
     }
 
     var file = fs.open(new Path(hdfsFile))
     val simrReplUrl = file.readUTF()
     file.close()
+    logDebug("ReplUrl: " + simrReplUrl)
     simrReplUrl
   }
 
   def readLoop(client: ActorRef) {
+    logDebug("Starting client loop")
     val console = new ConsoleReader()
 //    console.setPrompt(SimrReplClient.SIMR_PROMPT)
     console.setPrompt("")
