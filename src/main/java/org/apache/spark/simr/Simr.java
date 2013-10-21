@@ -108,36 +108,34 @@ public class Simr {
         System.setErr(new PrintStream(stderr));
     }
 
-    public void startShell() {
+    public void startDriver(Boolean shellMode) {
         String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
-        try {
-            redirectOutput("driver");
-            org.apache.spark.simr.SimrReplServer.main(new String[]{
-                    conf.get("simr_tmp_dir") + "/" + SHELLURL,
-                    getLocalIP(),
-                    master_url });
-        } catch (Exception ex) { System.out.println(ex); }
-    }
-
-    public void startMaster() {
-        String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
-        String main_class = conf.get("simr_main_class");
-        String rest_args = conf.get("simr_rest_args");
         String out_dir = conf.get("simr_out_dir");
 
-        String[] repl_args = new String[]{
-            conf.get("simr_tmp_dir") + "/" + SHELLURL,
-            getLocalIP(),
-            master_url,
-            "--jar",
-            out_dir,
-            main_class};
-
-        String[] program_args = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
-
         try {
-            org.apache.spark.simr.SimrReplServer.main(
-                    (String[]) ArrayUtils.addAll(repl_args, program_args));
+            if (shellMode) {
+                org.apache.spark.simr.SimrReplServer.main(new String[]{
+                    conf.get("simr_tmp_dir") + "/" + SHELLURL,
+                    getLocalIP(),
+                    master_url,
+                    out_dir});
+            } else {
+                String main_class = conf.get("simr_main_class");
+                String rest_args = conf.get("simr_rest_args");
+
+                String[] server_args = new String[]{
+                    conf.get("simr_tmp_dir") + "/" + SHELLURL,
+                    getLocalIP(),
+                    master_url,
+                    out_dir,
+                    "--jar",
+                    main_class};
+
+                String[] jar_args = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
+
+                org.apache.spark.simr.SimrReplServer.main(
+                        (String[]) ArrayUtils.addAll(server_args, jar_args));
+            }
         } catch (Exception ex) { System.out.println(ex); }
     }
 
@@ -240,10 +238,7 @@ public class Simr {
         boolean uniqueFlag = conf.get("simr_unique").toLowerCase().equals("true");
 
         if (isMaster()) {
-            if (shellFlag)
-                startShell();
-            else
-                startMaster();
+            startDriver(shellFlag);
         } else if (!uniqueFlag || uniqueFlag && isUnique()) {
             startWorker();
         }

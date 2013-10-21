@@ -236,6 +236,7 @@ public class SimrJob {
         checkParams();
         Configuration conf = new Configuration();
         updateConfig(conf);
+        String[] program_args;
 
         System.err.println("         _               \n" +
                 "   _____(_)___ ___  _____\n" +
@@ -248,21 +249,19 @@ public class SimrJob {
         Job job = setupJob(conf);
 
         boolean retBool = true;
+
+        job.submit();
+
         if (cmd.containsCommand("shell")) {
-            job.submit();
-
-            String[] program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL};
-
-            org.apache.spark.simr.SimrReplClient.main(program_args);
+            program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL};
         } else {
-            job.submit();
-
-            String[] program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL, "--readonly"};
-
-            org.apache.spark.simr.SimrReplClient.main(program_args);
-
-            retBool = job.waitForCompletion(true);
+            program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL,
+                                                "--readonly"};
         }
+
+        org.apache.spark.simr.SimrReplClient.main(program_args);
+
+        retBool = job.waitForCompletion(true);
 
         FileSystem fs = FileSystem.get(conf);
         for (FileStatus fstat : fs.listStatus(new Path(conf.get("simr_out_dir")))) {  // delete output files

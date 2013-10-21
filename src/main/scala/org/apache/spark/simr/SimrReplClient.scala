@@ -186,7 +186,7 @@ object SimrReplClient extends Logging {
     val replUrl = getReplUrl()
     setupActorSystem()
     val client = actorSystem.actorOf(Props[SimrReplClient], "SimrReplClient")
-    println (replUrl)
+    logInfo(replUrl)
     client ! InitClient(replUrl)
 
     if (readonly) {
