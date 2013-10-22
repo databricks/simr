@@ -19,14 +19,11 @@ package org.apache.spark.simr;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.net.InetAddress;
 import java.net.Inet4Address;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.URL;
-import java.net.URLClassLoader;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -46,7 +43,7 @@ public class Simr {
     private static final String ELECTIONDIR = "election"; // Directory used to do master election
     private static final String UNIQUEDIR = "unique"; // Directory used to do master election
     private static final String DRIVERURL = "driverurl";  // File used to store Spark driver URL
-    static final String SHELLURL = "shellurl";  // File used to store Spark driver URL
+    static final String RELAYURL = "relayurl";  // File used to store Spark driver URL
 
     static class UrlCoresTuple {
         public String url;
@@ -111,25 +108,33 @@ public class Simr {
     public void startDriver(Boolean shellMode) {
         String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
         String out_dir = conf.get("simr_out_dir");
+        String main_class;
+        String[] main_class_args;
 
-        String[] server_args = new String[]{ conf.get("simr_tmp_dir") + "/" + SHELLURL,
-            getLocalIP(), master_url, out_dir};
-
-        if (!shellMode) {
-            String main_class = conf.get("simr_main_class");
+        if (shellMode) {
+            main_class = "org.apache.spark.simr.SimrRepl";
+            // SimrRepl needs the driver url
+            main_class_args = new String[]{master_url};
+        } else {
+            main_class = conf.get("simr_main_class");
             String rest_args = conf.get("simr_rest_args");
 
-            // Append arguments that indicate that we are running a class in a jar instead of
-            // the REPL
-            server_args = (String[]) ArrayUtils.addAll(server_args, new String[]{"--jar", main_class});
-
-            // Append the params that will be passed to the main method of the class
-            String[] jar_params = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
-            server_args = (String[]) ArrayUtils.addAll(server_args, jar_params);
+            // Replace %spark_url% in params with actual driver location
+            // simr://some/hdfs/path
+            main_class_args = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
         }
 
+        String[] server_args = new String[]{
+            conf.get("simr_tmp_dir") + "/" + RELAYURL, // HDFS location of RelayServer URI
+            getLocalIP(),
+            master_url, // SIMR URI, which points to driver
+            out_dir, // Location on HDFS to dump driver's stdout and stderr
+            main_class // Class to run
+        };
+        server_args = (String[]) ArrayUtils.addAll(server_args, main_class_args);
+
         try {
-            org.apache.spark.simr.SimrReplServer.main(server_args);
+            org.apache.spark.simr.RelayServer.main(server_args);
         } catch (Exception ex) { System.out.println(ex); }
     }
 
