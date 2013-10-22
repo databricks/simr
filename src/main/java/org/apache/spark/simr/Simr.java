@@ -112,30 +112,24 @@ public class Simr {
         String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
         String out_dir = conf.get("simr_out_dir");
 
+        String[] server_args = new String[]{ conf.get("simr_tmp_dir") + "/" + SHELLURL,
+            getLocalIP(), master_url, out_dir};
+
+        if (!shellMode) {
+            String main_class = conf.get("simr_main_class");
+            String rest_args = conf.get("simr_rest_args");
+
+            // Append arguments that indicate that we are running a class in a jar instead of
+            // the REPL
+            server_args = (String[]) ArrayUtils.addAll(server_args, new String[]{"--jar", main_class});
+
+            // Append the params that will be passed to the main method of the class
+            String[] jar_params = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
+            server_args = (String[]) ArrayUtils.addAll(server_args, jar_params);
+        }
+
         try {
-            if (shellMode) {
-                org.apache.spark.simr.SimrReplServer.main(new String[]{
-                    conf.get("simr_tmp_dir") + "/" + SHELLURL,
-                    getLocalIP(),
-                    master_url,
-                    out_dir});
-            } else {
-                String main_class = conf.get("simr_main_class");
-                String rest_args = conf.get("simr_rest_args");
-
-                String[] server_args = new String[]{
-                    conf.get("simr_tmp_dir") + "/" + SHELLURL,
-                    getLocalIP(),
-                    master_url,
-                    out_dir,
-                    "--jar",
-                    main_class};
-
-                String[] jar_args = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
-
-                org.apache.spark.simr.SimrReplServer.main(
-                        (String[]) ArrayUtils.addAll(server_args, jar_args));
-            }
+            org.apache.spark.simr.SimrReplServer.main(server_args);
         } catch (Exception ex) { System.out.println(ex); }
     }
 
