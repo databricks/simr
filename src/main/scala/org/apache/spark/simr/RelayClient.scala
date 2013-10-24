@@ -91,6 +91,7 @@ object RelayClient extends Logging {
   val SIMR_SYSTEM_NAME = "SimrRepl"
 
   var hdfsFile: String = null
+  var readOnly: Boolean = false
   var actorSystem: ActorSystem = null
 
   def parseParams(raw_args: Array[String]) {
@@ -99,10 +100,11 @@ object RelayClient extends Logging {
     val args = cmd.getArgs()
 
     if (args.length != 1) {
-      println("Usage: RelayClient hdfs_file")
+      println("Usage: RelayClient hdfs_file [--readonly]")
       System.exit(1)
     }
     hdfsFile = args(0)
+    readOnly = cmd.containsCommand("readonly")
   }
 
   def setupActorSystem() {
@@ -190,8 +192,12 @@ object RelayClient extends Logging {
     logInfo(replUrl)
     client ! InitClient(replUrl)
 
-    readLoop(client)
-    actorSystem.shutdown()
+    if (readOnly) {
+      actorSystem.awaitTermination()
+    } else {
+      readLoop(client)
+      actorSystem.shutdown()
+    }
   }
 }
 

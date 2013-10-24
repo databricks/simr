@@ -249,7 +249,12 @@ public class SimrJob {
 
         job.submit();
 
-        program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.RELAYURL};
+        if (cmd.containsCommand("shell")) {
+            program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.RELAYURL};
+        } else {
+            program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.RELAYURL,
+                "--readonly"};
+        }
 
         org.apache.spark.simr.RelayClient.main(program_args);
 
