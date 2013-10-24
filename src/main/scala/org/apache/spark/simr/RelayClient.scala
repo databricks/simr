@@ -1,8 +1,10 @@
 package org.apache.spark.simr
 
-import scala.collection.JavaConversions
 import java.util.concurrent.TimeoutException
-import java.net.{NetworkInterface, Inet4Address, InetAddress}
+import java.net.{NetworkInterface, Inet4Address}
+
+import scala.collection.JavaConversions
+
 import akka.actor._
 import akka.dispatch.Await
 import akka.pattern.ask
@@ -11,6 +13,7 @@ import akka.util.duration._
 import jline_modified.console.ConsoleReader
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{Path, FileSystem}
+
 import org.apache.spark.util.AkkaUtils
 import org.apache.spark.Logging
 
@@ -32,7 +35,7 @@ import org.apache.spark.Logging
  */
 
 
-class SimrReplClient extends Actor with Logging {
+class RelayClient extends Actor with Logging {
 
   var server: ActorRef = null
 
@@ -62,7 +65,6 @@ class SimrReplClient extends Actor with Logging {
       val out = outType match {
         case StdoutOutputType() => Console.out
         case StderrOutputType() => Console.err
-        case BasicOutputType() => Console.out
       }
       out.print("\r")
       (0 to size-1).foreach(i => out.print(buf(i)))
@@ -71,26 +73,35 @@ class SimrReplClient extends Actor with Logging {
         needToReply = false
       }
 
-
     case ShutdownSimr() =>
       logInfo("Sending shutdown to server")
       server ! ShutdownSimr()
+
+    case ShutdownClient() =>
+      self ! PoisonPill
+      context.system.shutdown()
   }
 }
 
-object SimrReplClient extends Logging {
+object RelayClient extends Logging {
   val SIMR_PROMPT: String = "scala> "
-  val SIMR_SYSTEM_NAME = "SimrRepl"
+  val SIMR_SYSTEM_NAME = "SimrRelay"
 
   var hdfsFile: String = null
+  var readOnly: Boolean = false
   var actorSystem: ActorSystem = null
 
-  def parseParams(args: Array[String]) {
+  def parseParams(raw_args: Array[String]) {
+    val cmd = new CmdLine(raw_args)
+    cmd.parse()
+    val args = cmd.getArgs()
+
     if (args.length != 1) {
-      println("Usage: SimrReplClient hdfs_file")
+      println("Usage: RelayClient hdfs_file [--readonly]")
       System.exit(1)
     }
     hdfsFile = args(0)
+    readOnly = cmd.containsCommand("readonly")
   }
 
   def setupActorSystem() {
@@ -113,8 +124,8 @@ object SimrReplClient extends Logging {
     actorSystem = as
   }
 
-  def getReplUrl() = {
-    logDebug("Retrieving repl url from hdfs")
+  def getRelayUrl() = {
+    logDebug("Retrieving relay url from hdfs")
     val conf = new Configuration()
     val fs = FileSystem.get(conf)
 
@@ -140,19 +151,19 @@ object SimrReplClient extends Logging {
     }
 
     var file = fs.open(new Path(hdfsFile))
-    val simrReplUrl = file.readUTF()
+    val simrRelayUrl = file.readUTF()
     file.close()
-    logDebug("ReplUrl: " + simrReplUrl)
-    simrReplUrl
+    logDebug("RelayUrl: " + simrRelayUrl)
+    simrRelayUrl
   }
 
   def readLoop(client: ActorRef) {
     logDebug("Starting client loop")
     val console = new ConsoleReader()
-//    console.setPrompt(SimrReplClient.SIMR_PROMPT)
+//    console.setPrompt(RelayClient.SIMR_PROMPT)
     console.setPrompt("")
-    console.setPromptLen(SimrReplClient.SIMR_PROMPT.length)
-    console.setSearchPrompt(SimrReplClient.SIMR_PROMPT)
+    console.setPromptLen(RelayClient.SIMR_PROMPT.length)
+    console.setSearchPrompt(RelayClient.SIMR_PROMPT)
 
     implicit val timeout = Timeout(2 seconds)
 
@@ -172,13 +183,18 @@ object SimrReplClient extends Logging {
 
   def main(args: Array[String]) {
     parseParams(args)
-    val replUrl = getReplUrl()
+    val relayUrl = getRelayUrl()
     setupActorSystem()
-    val client = actorSystem.actorOf(Props[SimrReplClient], "SimrReplClient")
-    client ! InitClient(replUrl)
+    val client = actorSystem.actorOf(Props[RelayClient], "RelayClient")
+    logInfo(relayUrl)
+    client ! InitClient(relayUrl)
 
-    readLoop(client)
-
-    actorSystem.shutdown()
+    if (readOnly) {
+      actorSystem.awaitTermination()
+    } else {
+      readLoop(client)
+      actorSystem.shutdown()
+    }
   }
 }
+
