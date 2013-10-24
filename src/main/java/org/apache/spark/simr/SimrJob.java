@@ -93,8 +93,8 @@ public class SimrJob {
         String[] args = cmd.getArgs();
 
         if (!cmd.containsCommand("shell") && args.length < 3) {
-            System.err.println("Usage: SimrJob --shell [--outdir=hdfs_dir] [<optional>]");
-            System.err.println("Usage: SimrJob [--outdir=hdfs_dir] <your_jar_file> <main_class> <your_params> [<optional>]");
+            System.err.println("Usage: SimrJob --shell [<optional>]");
+            System.err.println("Usage: SimrJob <your_jar_file> <main_class> <your_params> [<optional>]");
             System.err.println("\n  --shell launches a Spark shell in the cluster with a remote interface on this node");
             System.err.println("  <your_params> will be passed to your <main_class>");
             System.err.println("  The string %spark_url% will be replaced with the SPARK master URL\n");
@@ -103,6 +103,10 @@ public class SimrJob {
             System.err.println("                     The default is the number of task trackers in the cluster. ");
             System.err.println("  --interface=<num>  Spark driver will bind to a particular network interface number.");
             System.err.println("                     The default is the first interface, e.g. --interface=0.");
+            System.err.println("  --outdir=<hdfsdir> Spark driver and workers will write copies of stdout and stderr to");
+            System.err.println("                     files in this directory on hdfs.");
+            System.err.println("                     If no directory name is set, it will be generated based on the date");
+            System.err.println("                     and time of the invocation of the job.");
             System.exit(1);
         }
 
@@ -160,7 +164,7 @@ public class SimrJob {
         } else {
             SimpleDateFormat date_formatter = new SimpleDateFormat("yyyy-MM-dd_kk_mm_ss");
             out_dir = date_formatter.format(new Date());
-            System.err.println("Did not specifiy outdir, using: " + out_dir);
+            System.err.println("Did not specifiy outdir, trying: " + out_dir);
         }
 
         try {
@@ -169,7 +173,7 @@ public class SimrJob {
             for (int x = 2; fs.exists(new Path(out_dir)); x++) {
                 String old_out_dir = out_dir;
                 out_dir = base_out_dir + "_" + x;
-                System.err.println(old_out_dir + " exists, using " + out_dir);
+                System.err.println(old_out_dir + " exists, trying " + out_dir);
             }
         } catch (IOException e) {
             e.printStackTrace();
