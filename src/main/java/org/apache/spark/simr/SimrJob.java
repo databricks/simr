@@ -161,7 +161,7 @@ public class SimrJob {
             out_dir = cmd.getCmd("outdir").val;
         } else {
             SimpleDateFormat date_formatter = new SimpleDateFormat("yyyy-MM-dd_kk_mm_ss");
-            out_dir = date_formatter.format(new Date());
+            out_dir = "simr-" + date_formatter.format(new Date());
             System.err.println("Did not specifiy outdir, trying: " + out_dir);
         }
 
