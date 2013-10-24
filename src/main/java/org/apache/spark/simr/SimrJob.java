@@ -147,11 +147,6 @@ public class SimrJob {
 
         String[] args = cmd.getArgs();
 
-        if (cmd.containsCommand("shell"))
-            conf.set("simr_shell", "true");
-        else
-            conf.set("simr_shell", "false");
-
         String out_dir = args[0];
 
         Path tmpPath = new Path(out_dir, SIMRTMPDIR);
@@ -192,7 +187,10 @@ public class SimrJob {
             conf.set("simr_unique", "false");
         }
 
-        if (!cmd.containsCommand("shell")) {
+        if (cmd.containsCommand("shell")) {
+            conf.set("simr_main_class", "org.apache.spark.simr.SimrRepl");
+            conf.set("simr_rest_args", "%spark_url%");
+        } else {
             String jar_file = args[1];
             String main_class = args[2];
 

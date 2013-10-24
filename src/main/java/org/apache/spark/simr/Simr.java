@@ -105,24 +105,15 @@ public class Simr {
         System.setErr(new PrintStream(stderr));
     }
 
-    public void startDriver(Boolean shellMode) {
+    public void startDriver() {
         String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
         String out_dir = conf.get("simr_out_dir");
-        String main_class;
-        String[] main_class_args;
 
-        if (shellMode) {
-            main_class = "org.apache.spark.simr.SimrRepl";
-            // SimrRepl needs the driver url
-            main_class_args = new String[]{master_url};
-        } else {
-            main_class = conf.get("simr_main_class");
-            String rest_args = conf.get("simr_rest_args");
+        String main_class = conf.get("simr_main_class");
+        String rest_args = conf.get("simr_rest_args");
 
-            // Replace %spark_url% in params with actual driver location
-            // simr://some/hdfs/path
-            main_class_args = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
-        }
+        // Replace %spark_url% in params with actual driver location simr://some/hdfs/path
+        String [] main_class_args = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
 
         String[] server_args = new String[]{
             conf.get("simr_tmp_dir") + "/" + RELAYURL, // HDFS location of RelayServer URI
@@ -233,11 +224,10 @@ public class Simr {
     }
 
     public void run() throws IOException {
-        boolean shellFlag = conf.get("simr_shell").toLowerCase().equals("true");
         boolean uniqueFlag = conf.get("simr_unique").toLowerCase().equals("true");
 
         if (isMaster()) {
-            startDriver(shellFlag);
+            startDriver();
         } else if (!uniqueFlag || uniqueFlag && isUnique()) {
             startWorker();
         }
