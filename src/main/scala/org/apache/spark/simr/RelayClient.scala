@@ -87,7 +87,7 @@ class RelayClient extends Actor with Logging {
 
 object RelayClient extends Logging {
   val SIMR_PROMPT: String = "scala> "
-  val SIMR_SYSTEM_NAME = "SimrRepl"
+  val SIMR_SYSTEM_NAME = "SimrRelay"
 
   var hdfsFile: String = null
   var readOnly: Boolean = false
@@ -126,8 +126,8 @@ object RelayClient extends Logging {
     actorSystem = as
   }
 
-  def getReplUrl() = {
-    logDebug("Retrieving repl url from hdfs")
+  def getRelayUrl() = {
+    logDebug("Retrieving relay url from hdfs")
     val conf = new Configuration()
     val fs = FileSystem.get(conf)
 
@@ -153,10 +153,10 @@ object RelayClient extends Logging {
     }
 
     var file = fs.open(new Path(hdfsFile))
-    val simrReplUrl = file.readUTF()
+    val simrRelayUrl = file.readUTF()
     file.close()
-    logDebug("ReplUrl: " + simrReplUrl)
-    simrReplUrl
+    logDebug("RelayUrl: " + simrRelayUrl)
+    simrRelayUrl
   }
 
   def readLoop(client: ActorRef) {
@@ -185,11 +185,11 @@ object RelayClient extends Logging {
 
   def main(args: Array[String]) {
     parseParams(args)
-    val replUrl = getReplUrl()
+    val relayUrl = getRelayUrl()
     setupActorSystem()
     val client = actorSystem.actorOf(Props[RelayClient], "RelayClient")
-    logInfo(replUrl)
-    client ! InitClient(replUrl)
+    logInfo(relayUrl)
+    client ! InitClient(relayUrl)
 
     if (readOnly) {
       actorSystem.awaitTermination()

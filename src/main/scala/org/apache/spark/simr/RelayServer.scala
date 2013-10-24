@@ -177,7 +177,7 @@ class RelayServer(simrUrl: String, out_dir: String, main_class: String, program_
 }
 
 object RelayServer extends Logging {
-  val SIMR_SYSTEM_NAME = "SimrRepl"
+  val SIMR_SYSTEM_NAME = "SimrRelay"
   var hdfsFile: String = null
   var hostname: String = null
   var simrUrl: String = null
@@ -206,12 +206,12 @@ object RelayServer extends Logging {
     actorSystem = as
   }
 
-  def writeReplUrl() {
+  def writeRelayUrl() {
     val provider = actorSystem.asInstanceOf[ExtendedActorSystem].provider
     val port: Int = provider.asInstanceOf[RemoteActorRefProvider].transport.address.port.get
-    val SimrReplUrl = "akka://%s@%s:%d/user/RelayServer".format(SIMR_SYSTEM_NAME, hostname, port)
+    val SimrRelayUrl = "akka://%s@%s:%d/user/RelayServer".format(SIMR_SYSTEM_NAME, hostname, port)
 
-    logInfo("Simr REPL running here: " + SimrReplUrl)
+    logInfo("Simr Relay running here: " + SimrRelayUrl)
 
     val tempPath = new Path(hdfsFile + "_tmp")
     val filePath = new Path(hdfsFile)
@@ -219,9 +219,9 @@ object RelayServer extends Logging {
     val conf = new Configuration()
     val fs = FileSystem.get(conf)
 
-    // Create temporary file to prevent race condition where ReplClient gets empty url file
+    // Create temporary file to prevent race condition where RelayClient gets empty url file
     val temp = fs.create(tempPath, true)
-    temp.writeUTF(SimrReplUrl)
+    temp.writeUTF(SimrRelayUrl)
     temp.close()
 
     // "Atomic" rename
@@ -234,7 +234,7 @@ object RelayServer extends Logging {
     val server = actorSystem.actorOf(Props(new RelayServer(simrUrl, out_dir, main_class,
       program_args)), "RelayServer")
 
-    writeReplUrl()
+    writeRelayUrl()
 
     actorSystem.awaitTermination()
   }
