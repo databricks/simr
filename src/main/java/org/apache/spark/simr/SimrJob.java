@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.hadoop.conf.Configuration;
@@ -91,9 +92,9 @@ public class SimrJob {
     public void checkParams() {
         String[] args = cmd.getArgs();
 
-        if ( (!cmd.containsCommand("shell") && args.length < 4) || (cmd.containsCommand("shell") && args.length < 1) ) {
-            System.err.println("Usage: SimrJob --shell <out_dir> [<optional>]");
-            System.err.println("Usage: SimrJob <out_dir> <your_jar_file> <main_class> <your_params> [<optional>]");
+        if (!cmd.containsCommand("shell") && args.length < 3) {
+            System.err.println("Usage: SimrJob --shell [--outdir=hdfs_dir] [<optional>]");
+            System.err.println("Usage: SimrJob [--outdir=hdfs_dir] <your_jar_file> <main_class> <your_params> [<optional>]");
             System.err.println("\n  --shell launches a Spark shell in the cluster with a remote interface on this node");
             System.err.println("  <your_params> will be passed to your <main_class>");
             System.err.println("  The string %spark_url% will be replaced with the SPARK master URL\n");
@@ -108,8 +109,8 @@ public class SimrJob {
         if (cmd.containsCommand("shell"))
             return;
 
-        String jar_file = args[1];
-        String main_class = args[2];
+        String jar_file = args[0];
+        String main_class = args[1];
 
         File file = new File(jar_file);
         if (!file.exists()) {
@@ -153,7 +154,27 @@ public class SimrJob {
         else
             conf.set("simr_shell", "false");
 
-        String out_dir = args[0];
+        String out_dir;
+        if (cmd.containsCommand("outdir")){
+            out_dir = cmd.getCmd("outdir").val;
+        } else {
+            SimpleDateFormat date_formatter = new SimpleDateFormat("yyyy-MM-dd_kk_mm_ss");
+            out_dir = date_formatter.format(new Date());
+            System.err.println("Did not specifiy outdir, using: " + out_dir);
+        }
+
+        try {
+            FileSystem fs = FileSystem.get(conf);
+            String base_out_dir = out_dir;
+            for (int x = 2; fs.exists(new Path(out_dir)); x++) {
+                String old_out_dir = out_dir;
+                out_dir = base_out_dir + "_" + x;
+                System.err.println(old_out_dir + " exists, using " + out_dir);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
 
         Path tmpPath = new Path(out_dir, SIMRTMPDIR);
         conf.set("simr_tmp_dir", tmpPath.toString());
@@ -194,11 +215,11 @@ public class SimrJob {
         }
 
         if (!cmd.containsCommand("shell")) {
-            String jar_file = args[1];
-            String main_class = args[2];
+            String jar_file = args[0];
+            String main_class = args[1];
 
             String rest_args = ""; // all of the rest of the args joined together
-            for (int x = 3; x < args.length; x++) {
+            for (int x = 2; x < args.length; x++) {
                 rest_args += args[x];
                 if (x < args.length-1)
                     rest_args += " ";

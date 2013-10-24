@@ -25,7 +25,7 @@ then
    exit 1
 fi
 
-if [ "$#" -le 1 ];
+if [ "$#" -le 0 ];
 then
   echo "Usage:"
   echo "  $PROGNAME [--size=N] <hdfs_out_dir> <your_spark_jar> <main_class_name> <parameters>"
