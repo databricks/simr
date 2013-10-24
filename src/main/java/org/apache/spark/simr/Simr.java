@@ -26,6 +26,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -33,12 +34,16 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Simr {
 
     private Mapper.Context context;
     private Configuration conf;
     private FileSystem fs;
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass().getName());
 
     private static final String ELECTIONDIR = "election"; // Directory used to do master election
     private static final String UNIQUEDIR = "unique"; // Directory used to do master election
@@ -130,9 +135,14 @@ public class Simr {
     }
 
     public void startWorker() throws IOException {
+        StopWatch sw = new StopWatch();
+        sw.start();
         UrlCoresTuple uc = getMasterURL();
-        if (uc == null)
+        sw.stop();
+        if (uc == null) {
+            log.warn(String.format("getMasterURL timed out in startWorker after "), sw.toString());
             return;
+        }
         int uniqueId = context.getTaskAttemptID().getTaskID().getId();
         int maxCores = uc.cores;
         String masterUrl = uc.url;
