@@ -147,11 +147,6 @@ public class SimrJob {
 
         String[] args = cmd.getArgs();
 
-        if (cmd.containsCommand("shell"))
-            conf.set("simr_shell", "true");
-        else
-            conf.set("simr_shell", "false");
-
         if (cmd.containsCommand("memory")) {
             conf.set("mapred.child.java.opts", "-Xmx" + cmd.getCmd("memory").val + "m");
         }
