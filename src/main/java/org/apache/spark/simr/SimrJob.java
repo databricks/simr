@@ -258,7 +258,7 @@ public class SimrJob {
 
         org.apache.spark.simr.RelayClient.main(program_args);
 
-        retBool = job.waitForCompletion(true);
+        retBool = job.waitForCompletion(false);
 
         FileSystem fs = FileSystem.get(conf);
         for (FileStatus fstat : fs.listStatus(new Path(conf.get("simr_out_dir")))) {  // delete output files
