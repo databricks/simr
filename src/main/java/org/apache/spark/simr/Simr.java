@@ -150,7 +150,7 @@ public class Simr {
 
         redirectOutput("worker" + uniqueId);
 
-        org.apache.spark.executor.StandaloneExecutorBackend.main(exList);
+        org.apache.spark.executor.CoarseGrainedExecutorBackend.main(exList);
     }
 
     public UrlCoresTuple getMasterURL() throws IOException {
