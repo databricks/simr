@@ -39,7 +39,6 @@ case class NewCommand(str: String)
 case class FlushMessages()
 
 trait OutputType
-case class BasicOutputType() extends OutputType
 case class StdoutOutputType() extends OutputType
 case class StderrOutputType() extends OutputType
 
@@ -137,7 +136,6 @@ class RelayServer(simrUrl: String, out_dir: String, main_class: String, program_
     val out = outType match {
       case StdoutOutputType() => stdoutFile
       case StderrOutputType() => stderrFile
-      case BasicOutputType() => stdoutFile
     }
     out.write(buf, 0, size)
   }

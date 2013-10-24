@@ -67,7 +67,6 @@ class RelayClient extends Actor with Logging {
       val out = outType match {
         case StdoutOutputType() => Console.out
         case StderrOutputType() => Console.err
-        case BasicOutputType() => Console.out
       }
       out.print("\r")
       (0 to size-1).foreach(i => out.print(buf(i)))
