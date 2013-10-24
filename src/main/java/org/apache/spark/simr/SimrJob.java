@@ -19,7 +19,6 @@ package org.apache.spark.simr;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
@@ -148,11 +147,6 @@ public class SimrJob {
 
         String[] args = cmd.getArgs();
 
-        if (cmd.containsCommand("shell"))
-            conf.set("simr_shell", "true");
-        else
-            conf.set("simr_shell", "false");
-
         String out_dir = args[0];
 
         Path tmpPath = new Path(out_dir, SIMRTMPDIR);
@@ -193,7 +187,10 @@ public class SimrJob {
             conf.set("simr_unique", "false");
         }
 
-        if (!cmd.containsCommand("shell")) {
+        if (cmd.containsCommand("shell")) {
+            conf.set("simr_main_class", "org.apache.spark.simr.SimrRepl");
+            conf.set("simr_rest_args", "%spark_url%");
+        } else {
             String jar_file = args[1];
             String main_class = args[2];
 
@@ -236,6 +233,7 @@ public class SimrJob {
         checkParams();
         Configuration conf = new Configuration();
         updateConfig(conf);
+        String[] program_args;
 
         System.err.println("         _               \n" +
                 "   _____(_)___ ___  _____\n" +
@@ -248,15 +246,19 @@ public class SimrJob {
         Job job = setupJob(conf);
 
         boolean retBool = true;
+
+        job.submit();
+
         if (cmd.containsCommand("shell")) {
-            job.submit();
-
-            String[] program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.SHELLURL};
-
-            org.apache.spark.simr.SimrReplClient.main(program_args);
+            program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.RELAYURL};
         } else {
-            retBool = job.waitForCompletion(true);
+            program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.RELAYURL,
+                "--readonly"};
         }
+
+        org.apache.spark.simr.RelayClient.main(program_args);
+
+        retBool = job.waitForCompletion(false);
 
         FileSystem fs = FileSystem.get(conf);
         for (FileStatus fstat : fs.listStatus(new Path(conf.get("simr_out_dir")))) {  // delete output files

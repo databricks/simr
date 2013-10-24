@@ -19,15 +19,14 @@ package org.apache.spark.simr;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.net.InetAddress;
 import java.net.Inet4Address;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.URL;
-import java.net.URLClassLoader;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -35,6 +34,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Simr {
 
@@ -42,10 +43,12 @@ public class Simr {
     private Configuration conf;
     private FileSystem fs;
 
+    private final Logger log = LoggerFactory.getLogger(this.getClass().getName());
+
     private static final String ELECTIONDIR = "election"; // Directory used to do master election
     private static final String UNIQUEDIR = "unique"; // Directory used to do master election
     private static final String DRIVERURL = "driverurl";  // File used to store Spark driver URL
-    static final String SHELLURL = "shellurl";  // File used to store Spark driver URL
+    static final String RELAYURL = "relayurl";  // File used to store Spark driver URL
 
     static class UrlCoresTuple {
         public String url;
@@ -107,37 +110,39 @@ public class Simr {
         System.setErr(new PrintStream(stderr));
     }
 
-    public void startShell() {
+    public void startDriver() {
         String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
-        try {
-            redirectOutput("driver");
-            org.apache.spark.simr.SimrReplServer.main(new String[]{
-                    conf.get("simr_tmp_dir") + "/" + SHELLURL,
-                    getLocalIP(),
-                    master_url });
-        } catch (Exception ex) { System.out.println(ex); }
-    }
+        String out_dir = conf.get("simr_out_dir");
 
-    public void startMaster() {
-        String master_url = "simr://" + conf.get("simr_tmp_dir") + "/" + DRIVERURL;
         String main_class = conf.get("simr_main_class");
         String rest_args = conf.get("simr_rest_args");
 
-        String[] program_args = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
+        // Replace %spark_url% in params with actual driver location simr://some/hdfs/path
+        String [] main_class_args = rest_args.replaceAll("\\%spark_url\\%", master_url).split(" ");
+
+        String[] server_args = new String[]{
+            conf.get("simr_tmp_dir") + "/" + RELAYURL, // HDFS location of RelayServer URI
+            getLocalIP(),
+            master_url, // SIMR URI, which points to driver
+            out_dir, // Location on HDFS to dump driver's stdout and stderr
+            main_class // Class to run
+        };
+        server_args = (String[]) ArrayUtils.addAll(server_args, main_class_args);
 
         try {
-            redirectOutput("driver");
-            URLClassLoader mainCL = new URLClassLoader(new URL[]{}, this.getClass().getClassLoader());
-            Class myClass = Class.forName(main_class, true, mainCL);
-            Method method = myClass.getDeclaredMethod("main", new Class[]{String[].class});
-            Object result = method.invoke(null, new Object[]{program_args});
+            org.apache.spark.simr.RelayServer.main(server_args);
         } catch (Exception ex) { System.out.println(ex); }
     }
 
     public void startWorker() throws IOException {
+        StopWatch sw = new StopWatch();
+        sw.start();
         UrlCoresTuple uc = getMasterURL();
-        if (uc == null)
+        sw.stop();
+        if (uc == null) {
+            log.warn(String.format("getMasterURL timed out in startWorker after "), sw.toString());
             return;
+        }
         int uniqueId = context.getTaskAttemptID().getTaskID().getId();
         int maxCores = uc.cores;
         String masterUrl = uc.url;
@@ -229,14 +234,10 @@ public class Simr {
     }
 
     public void run() throws IOException {
-        boolean shellFlag = conf.get("simr_shell").toLowerCase().equals("true");
         boolean uniqueFlag = conf.get("simr_unique").toLowerCase().equals("true");
 
         if (isMaster()) {
-            if (shellFlag)
-                startShell();
-            else
-                startMaster();
+            startDriver();
         } else if (!uniqueFlag || uniqueFlag && isUnique()) {
             startWorker();
         }
