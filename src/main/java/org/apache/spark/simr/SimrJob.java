@@ -156,8 +156,6 @@ public class SimrJob {
             conf.set("mapred.child.java.opts", "-Xmx" + cmd.getCmd("memory").val + "m");
         }
 
-        String out_dir = args[0];
-
         String out_dir;
         if (cmd.containsCommand("outdir")){
             out_dir = cmd.getCmd("outdir").val;
