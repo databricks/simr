@@ -168,7 +168,13 @@ public class Simr {
         Path driverFile = new Path(simrDirName + "/" + DRIVERURL);
 
         while (!gotDriverUrl && tries++ < MAXTRIES) {
-            FileStatus[] lsArr = fs.listStatus(driverFile);
+            FileStatus[] lsArr;
+            try {
+                lsArr = fs.listStatus(driverFile);
+            } catch (java.io.FileNotFoundException e) {
+                lsArr = null;
+            }
+
             if (lsArr != null && lsArr.length != 0 && lsArr[0].getLen() > 0) {
                 gotDriverUrl = true;
                 FSDataInputStream inPortFile =  fs.open(driverFile);

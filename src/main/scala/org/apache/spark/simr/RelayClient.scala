@@ -12,7 +12,7 @@ import akka.util.Timeout
 import akka.util.duration._
 import jline_modified.console.ConsoleReader
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.hadoop.fs.{Path, FileSystem, FileStatus}
 
 import org.apache.spark.util.AkkaUtils
 import org.apache.spark.Logging
@@ -136,7 +136,15 @@ object RelayClient extends Logging {
 
     while (!foundFile && tries < MAXTRIES) {
       logDebug("Attempt: " + tries)
-      val fstatArr = fs.listStatus(path)
+
+      var fstatArr: Array[FileStatus] = null
+      try {
+        fstatArr = fs.listStatus(path)
+      } catch {
+        case ioe: java.io.FileNotFoundException =>
+          fstatArr = null
+      }
+
       if (fstatArr != null && fstatArr.length > 0 && fstatArr(0).getLen > 0) {
         foundFile = true
       } else {
