@@ -40,12 +40,16 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SimrJob {
     private static final String SPARKJAR = "spark.jar"; // Spark assembly jar
     private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SimrJob
     private static final String SIMRVER = "0.6";
     CmdLine cmd;
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass().getName());
 
     public SimrJob(String[] args) {
         cmd = new CmdLine(args);
@@ -271,7 +275,7 @@ public class SimrJob {
             Method setClassPath = job.getClass().getMethod("setUserClassesTakesPrecedence", java.lang.Boolean.TYPE);
             setClassPath.invoke(job, true);
         } catch (Exception e) {
-            System.err.println("Could not set user classpath first using CDH API");
+            log.debug("Could not set user classpath first using CDH API");
         }
 
         return job;
