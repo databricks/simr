@@ -111,8 +111,10 @@ class RelayServer(simrUrl: String, out_dir: String, main_class: String, program_
         }
       } catch {
         case e: java.lang.reflect.InvocationTargetException =>
-          System.err.println(e.getCause)
-          Thread.sleep(4000) // Sleep as to let the stderr be flushed to the remote client
+          val err = e.getCause.toString.toCharArray
+          client ! ReplOutput(err, err.size, StderrOutputType())
+          logWarning("RelayServer shutting down after exception in invoked class")
+          Thread.sleep(4000) // Sleep as to let the error msg be flushed to the remote client
       }
       self ! ShutdownSimr()
     }
