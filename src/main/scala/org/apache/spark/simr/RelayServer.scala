@@ -102,11 +102,17 @@ class RelayServer(simrUrl: String, out_dir: String, main_class: String, program_
     // in a separate thread, otherwise in/out/err piped streams might overflow due to no reader
     // draining them
     spawn {
-      Console.withIn(bufStdinReader) {
-        val mainCL: URLClassLoader = new URLClassLoader(Array[URL](), this.getClass().getClassLoader());
-        val myClass = Class.forName(main_class, true, mainCL);
-        val method = myClass.getDeclaredMethod("main", classOf[Array[String]])
-        method.invoke(null, program_args.asInstanceOf[Array[Object]])
+      try {
+        Console.withIn(bufStdinReader) {
+          val mainCL: URLClassLoader = new URLClassLoader(Array[URL](), this.getClass().getClassLoader());
+          val myClass = Class.forName(main_class, true, mainCL);
+          val method = myClass.getDeclaredMethod("main", classOf[Array[String]])
+          method.invoke(null, program_args.asInstanceOf[Array[Object]])
+        }
+      } catch {
+        case e: java.lang.reflect.InvocationTargetException =>
+          System.err.println(e.getCause)
+          Thread.sleep(4000) // Sleep as to let the stderr be flushed to the remote client
       }
       self ! ShutdownSimr()
     }
