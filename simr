@@ -28,7 +28,7 @@ fi
 if [ "$#" -le 0 ];
 then
   echo "Usage:"
-  echo "  $PROGNAME [--slots=N] [--memory=N] <hdfs_out_dir> <your_spark_jar> <main_class_name> <parameters>"
+  echo "  $PROGNAME [--slots=N] [--memory=N] [--outdir=hdfs_out_dir] <your_spark_jar> <main_class_name> <parameters>"
   echo ""
   echo "  <parameters> will be passed to your <main_class_name>, with %spark_url%"
   echo "      replaced with the Spark URL that must be passed to SparkContext."
@@ -39,15 +39,15 @@ then
   echo "      It must be an integer value."
   echo "      Example: --memory=1024 will set the heap size of each executor to 1024 MB."
   echo ""
-  echo "  $PROGNAME [--slots=N] --shell <hdfs_out_dir>"
+  echo "  $PROGNAME [--slots=N] [--outdir=hdfs_out_dir] --shell"
   echo ""
   echo "  Run $PROGNAME with an interactive shell."
   echo ""
   exit 1
 fi
 
-OUTDIR=$1
-USERJAR=$2
+USERJAR=$1
+MAINCLASS=$2
 
 if [ -a "$USERJAR" ];
 then
@@ -69,4 +69,4 @@ fi
 fsize=$(ls -1hl $SIMRJAR | cut -d " " -f 5)
 echo "Uploading $SIMRJAR ($fsize) to the Hadoop cluster, this may take a while"
 
-HADOOP_USER_CLASSPATH_FIRST=1 HADOOP_CLASSPATH=$SIMRJAR exec $HADOOPBIN jar $SIMRJAR $OUTDIR $USERJAR $@
+HADOOP_USER_CLASSPATH_FIRST=1 HADOOP_CLASSPATH=$SIMRJAR exec $HADOOPBIN jar $SIMRJAR $USERJAR $MAINCLASS $@
