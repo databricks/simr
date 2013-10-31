@@ -7,7 +7,7 @@
 
 INPATH=$(type -P "hadoop") 
 PROGNAME=$(basename $0)
-SIMRJAR="simr.jar"
+SIMRJAR=$(eval echo "simr*.jar")
 
 if [ -f "$INPATH" ]; then
   HADOOPBIN=$INPATH
