@@ -39,7 +39,7 @@ then
   echo "      It must be an integer value."
   echo "      Example: --memory=1024 will set the heap size of each executor to 1024 MB."
   echo ""
-  echo "  $PROGNAME [--slots=N] [--outdir=hdfs_out_dir] --shell"
+  echo "  $PROGNAME [--slots=N] [--memory=N] [--outdir=hdfs_out_dir] --shell"
   echo ""
   echo "  Run $PROGNAME with an interactive shell."
   echo ""
