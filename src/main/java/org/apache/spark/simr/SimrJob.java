@@ -19,6 +19,7 @@ package org.apache.spark.simr;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.SimpleDateFormat;
@@ -39,12 +40,16 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SimrJob {
     private static final String SPARKJAR = "spark.jar"; // Spark assembly jar
     private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SimrJob
     private static final String SIMRVER = "0.6";
     CmdLine cmd;
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass().getName());
 
     public SimrJob(String[] args) {
         cmd = new CmdLine(args);
@@ -145,7 +150,14 @@ public class SimrJob {
 
     public void updateConfig(Configuration conf) {
 
+        // Set SIMR and Spark jars to come before Hadoop jars
+        // Set this parameter for each of the different Hadoop distributions we might encounter
+        // See setupJob for setting this parameter for CDH3/4
         conf.set("mapreduce.user.classpath.first", "true"); // important: ensure hadoop jars come last
+        conf.set("mapreduce.task.classpath.user.precedence", "true"); // CDH4
+        conf.set("mapreduce.task.classpath.first", "true"); // 0.20 and 1.x
+        conf.set("mapreduce.job.user.classpath.first", "true"); // MR2
+
         conf.set("mapred.map.tasks.speculative.execution", "false");
         conf.setInt("mapreduce.map.maxattempts", 1); // don't rerun if it crashes, needed in case Spark System.exit()'s
         conf.setInt("mapred.map.max.attempts", 1); // don't rerun if it crashes, needed in case Spark System.exit()'s
@@ -255,6 +267,17 @@ public class SimrJob {
         job.setInputFormatClass(SimrInputFormat.class);
 
         FileOutputFormat.setOutputPath(job, new Path(conf.get("simr_out_dir")));
+
+        // CDH Method of setting user class path first
+        // Implemented with reflection to ensure that code still compiles against Hadoop versions
+        // with different API
+        try {
+            Method setClassPath = job.getClass().getMethod("setUserClassesTakesPrecedence", java.lang.Boolean.TYPE);
+            setClassPath.invoke(job, true);
+        } catch (Exception e) {
+            log.debug("Could not set user classpath first using CDH API");
+        }
+
         return job;
     }
 
