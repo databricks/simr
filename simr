@@ -1,13 +1,21 @@
 #!/bin/bash
 
-############################################################
-# Set this if the hadoop binary/script is not in the PATH  #
-# HADOOP=/root/hadoop/bin/hadoop                           #
-############################################################
+#############################################################
+# Set this if the hadoop binary/script is not in the PATH   #
+# HADOOP=/root/hadoop/bin/hadoop                            #
+#############################################################
+
+SIMRJAR=$(eval echo "ls -1 simr*.jar | head -1")
+
+#############################################################
+# Set SIMRJAR to point to the desired SIMR jar distribution #
+# Otherwise, it picks the first simr*.jar file found        #
+# SIMRJAR=simr-cdh3.jar                                     #
+#############################################################
 
 INPATH=$(type -P "hadoop") 
 PROGNAME=$(basename $0)
-SIMRJAR=$(eval echo "simr*.jar")
+
 
 if [ -f "$INPATH" ]; then
   HADOOPBIN=$INPATH
