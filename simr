@@ -5,7 +5,7 @@
 # HADOOP=/root/hadoop/bin/hadoop                            #
 #############################################################
 
-SIMRJAR=$(eval echo "ls -1 simr*.jar | head -1")
+SIMRJAR=$(eval "ls -1 simr*.jar | head -1")
 
 #############################################################
 # Set SIMRJAR to point to the desired SIMR jar distribution #
