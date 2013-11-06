@@ -2,11 +2,29 @@
 
 ## Quick Guide
 
-This guide assumes `simr.jar` exists. If you don't have it you have to
-build a Spark jumbo jar and build Simr. See below.
+Download the `simr` runtime script and a `simr.jar` that matches the version of Hadoop your cluster
+is running. If it is not provided, you will have to build it yourself. [See
+below](#advanced-configuration).
+
+* SIMR runtime script
+  + [Download] (https://s3-us-west-1.amazonaws.com/simr/simr)
+* SIMR jars are provided for the following Hadoop versions:
+  + [1.0.4] (https://s3-us-west-1.amazonaws.com/simr/simr-hadoop1.0.4-untested.jar)
+  + [1.2.x] (https://s3-us-west-1.amazonaws.com/simr/simr-hadoop1.2.0.jar)
+  + [0.20 (CDH3)] (https://s3-us-west-1.amazonaws.com/simr/simr-cdh3.jar)
+  + [2.0.0 (CDH4)] (https://s3-us-west-1.amazonaws.com/simr/simr-cdh4.4.0.jar)
 
 Place `simr` and `simr.jar` in a directory and call `simr` to get
-usage information. Try this! If you get stuck, continue reading.
+usage information. Try running the shell! If you get stuck, continue reading.
+```shell
+./simr --shell
+```
+
+## Requirements
+
+* Java v1.6 is required
+* SIMR will ship Scala 2.9.3 and Spark 0.8.1 to the Hadoop cluster and execute your program with them.
+* SIMR jars are provided for Hadoop 1.0.4, 1.2.x, 0.20 (CDH3), 2.0.0 (CDH4)
 
 ## Guide
 
@@ -15,14 +33,23 @@ $HADOOP to point to the binary, or the hadoop/bin directory.
 
 To run a Spark application, package it up as a JAR file and execute:
 ```shell
-./simr out_dir jar_file main_class parameters
+./simr jar_file main_class parameters [--outdir=<hdfs_out_dir>] [--slots=N] [--unique]
 ```
 
-* `outdir` is a (absolute or relative) path in HDFS where your job's output will be stored, e.g. `/user/alig/myjob11`
 * `jar_file` is a JAR file containing all your programs, e.g. `spark-examples.jar`
 * `main_class` is the name of the class with a `main` method, e.g. `org.apache.spark.examples.SparkPi`
-* `parameters` is a list of parameters that will be passed to your `main_class`. 
+* `parameters` is a list of parameters that will be passed to your `main_class`.
  + _Important_: the special parameter `%spark_url%` will be replaced with the Spark driver URL.
+* `outdir` is an optional parameter which sets the path (absolute or relative) in HDFS where your
+  job's output will be stored, e.g. `/user/alig/myjob11`.
+  + If this parameter is not set, a directory will be created using the current time stamp in the
+    form of `yyyy-MM-dd_kk_mm_ss`, e.g.  `2013-12-01_11_12_13`
+* `slots` is an optional parameter that specifies the number of Map slots SIMR should utilize.  By
+  default, SIMR sets the value to the number of nodes in the cluster.
+  + This value must be at least 2, otherwise no executors will be present and the task will never
+    complete.
+* `unique` is an optional parameter which ensures that each node in the cluster will run at most 1
+  SIMR executor.
 
 Your output will be placed in the `outdir` in HDFS, this includes output from stdout/stderr for the driver and all executors.
 
@@ -35,18 +62,13 @@ Your output will be placed in the `outdir` in HDFS, this includes output from st
 
 Assuming `spark-examples.jar` exists and contains the Spark examples, the following will execute the example that computes pi in 100 partitions in parallel:
 ```shell
-./simr pi_outdir spark-examples.jar org.apache.spark.examples.SparkPi %spark_url% 100
+./simr spark-examples.jar org.apache.spark.examples.SparkPi %spark_url% 100
 ```
 
 Alternatively, you can launch a Spark-shell like this:
 ```shell
-./simr new_out_dir --shell
+./simr --shell
 ```
-
-## Requirements
-* Java v1.6 is required
-* SIMR will ship Scala 2.9.3 and Spark 0.8 to the Hadoop cluster and execute your program with them.
-* SIMR written and compiled for Hadoop v1.2.1
 
 ## Configuration
 
@@ -55,35 +77,53 @@ or its directory.
 
 By default SIMR figures out the number of task trackers in the cluster
 and launches a job that is the same size as the cluster. This can be
-adjusted by supplying the command line parameter ``--size=<integer>``
+adjusted by supplying the command line parameter ``--slots=<integer>``
 to ``simr`` or setting the Hadoop configuration parameter
-`simr.cluster.size`.
+`simr.cluster.slots`.
 
-## Creating simr.jar and building SIMR
+## Advanced Configuration
 
-Download Spark. This needs to be the version that supports the Simr backend scheduler:
-https://github.com/alig/spark
+The following sections are targeted at users who aim to build the SIMR jar for versions of Hadoop
+for which jars have not been provided.
 
-1. Run `sbt/sbt assembly` which creates a giant jumbo jar containing
-all of spark in `assembly/target/scala*/`.
+## Building Spark
 
-2. Copy this file into the Simr `lib/` directory.
+In order to build SIMR, we must first compile a version of Spark that targets the version of Hadoop
+that SIMR will be run on.
 
-3. Now build and build a jumbo jar of Simr (this will automatically
-include the Spark jumbo jar), creating a jumbo-jumbo jar is done with
-`sbt/sbt assembly`. The jumbo-jumbo jar can be found in
-`target/scala*`.
+1. Download Spark v0.8.1 or greater.
 
-3. Rename the jumbo-jumbo jar to `simr.jar` and put it in the same
-directory as the runtime script `simr` and follow the instructions
-above to execute simr.
+2. Unpack and enter the Spark directory.
+
+3. Modify `project/SparkBuild.scala`
+  + Change the value of `DEFAULT_HADOOP_VERSION` to match the version of Hadoop you are targeting, e.g.
+  `val DEFAULT_HADOOP_VERSION = "1.2.0"`
+
+4. Run `sbt/sbt assembly` which creates a giant jumbo jar containing all of Spark in
+   `assembly/target/scala*/spark-assembly-<spark-version>-SNAPSHOT-<hadoop-version>.jar`.
+
+## Building SIMR and simr.jar
+
+1. Checkout the SIMR repository from https://github.com/databricks/simr.git
+
+2. Copy the Spark jumbo jar into the SIMR `lib/` directory.
+
+3. Run `sbt/sbt assembly` in the root of the SIMR directory. This will build the SIMR jumbo jar and
+   automatically include the Spark jumbo jar. The final jar will be output as
+   `target/scala*/simr.jar`.
+
+   TODO: This step doesn't work without zip -d lib/spark.jar "META-INF/LICENSE". Have to fix merge
+   rule to deal with this.
+
+4. Copy `target/scala*/simr.jar` to the same directory as the runtime script `simr` and follow the
+   instructions above to execute SIMR.
 
 ## How it works (advanced)
 
 SIMR launches a Hadoop MapReduce job that only contains mappers. It
 ensures that a jumbo jar (simr.jar), containing Scala and Spark, gets
 uploaded to the machines of the mappers. It also ensures that the job
-jar you specified gets shipped to those nodes. 
+jar you specified gets shipped to those nodes.
 
 Once the mappers are all running with the right dependencies in place,
 SIMR uses HDFS to do leader election to elect one of the mappers as
@@ -91,7 +131,7 @@ the Spark driver. SIMR then executes your job driver, which uses a new
 SIMR scheduler backend that generates and accepts driver URLs of the
 form `simr://path`.  SIMR thereafter communicates the new driver URL
 to all the mappers, which then start Spark executors. The executors
-connect back to the driver, which executes your program. 
+connect back to the driver, which executes your program.
 
 All output to stdout and stderr is redirected to the specified HDFS
 directory. Once your job is done, the SIMR backend scheduler has
