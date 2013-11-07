@@ -117,8 +117,8 @@ public class SimrJob {
         if (cmd.containsCommand("shell"))
             return;
 
-        String jar_file = args[0];
-        String main_class = args[1];
+        String jar_file = args[1];
+        String main_class = args[2];
 
         File file = new File(jar_file);
         if (!file.exists()) {
@@ -228,15 +228,18 @@ public class SimrJob {
             conf.set("simr_unique", "false");
         }
 
+        String spark_jar_file = args[0];
+        conf.set("spark_jar_file", spark_jar_file);
+
         if (cmd.containsCommand("shell")) {
             conf.set("simr_main_class", "org.apache.spark.simr.SimrRepl");
             conf.set("simr_rest_args", "%spark_url%");
         } else {
-            String jar_file = args[0];
-            String main_class = args[1];
+            String jar_file = args[1];
+            String main_class = args[2];
 
             String rest_args = ""; // all of the rest of the args joined together
-            for (int x = 2; x < args.length; x++) {
+            for (int x = 3; x < args.length; x++) {
                 rest_args += args[x];
                 if (x < args.length-1)
                     rest_args += " ";
@@ -252,7 +255,10 @@ public class SimrJob {
 
         String[] jarArgs = new String[]{};
         if (!cmd.containsCommand("shell"))
-            jarArgs = new String[]{"-libjars", conf.get("simr_jar_file")};
+            jarArgs = new String[]{"-libjars", conf.get("simr_jar_file") + "," +
+                                   conf.get("spark_jar_file")};
+        else
+            jarArgs = new String[]{"-libjars", conf.get("spark_jar_file")};
 
         String[] otherArgs = new GenericOptionsParser(conf, jarArgs).getRemainingArgs();
 
