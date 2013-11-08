@@ -204,7 +204,7 @@ public class SimrJob {
             try {
                 ClusterSizeJob clusterSizeJob = new ClusterSizeJob();
                 ToolRunner.run(new Configuration(), clusterSizeJob, args);
-                clusterSize = Math.max(clusterSizeJob.getClusterSize(), 2);
+                clusterSize = Math.min(Math.max(clusterSizeJob.getClusterSize(), 2), 10); // min 2, max 10
             } catch (Exception ex) {
                 System.err.println("Couldn't find out cluster size.\n\n");
                 ex.printStackTrace();
