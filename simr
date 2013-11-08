@@ -6,6 +6,7 @@
 #############################################################
 
 SIMRJAR=$(eval "ls -1 simr*.jar | head -1")
+SPARKJAR=$(eval "ls -1 spark*.jar | head -1")
 
 #############################################################
 # Set SIMRJAR to point to the desired SIMR jar distribution #
@@ -83,4 +84,4 @@ fi
 fsize=$(ls -1hl $SIMRJAR | cut -d " " -f 5)
 echo "Uploading $SIMRJAR ($fsize) to the Hadoop cluster, this may take a while"
 
-HADOOP_USER_CLASSPATH_FIRST=1 HADOOP_CLASSPATH=$SIMRJAR exec $HADOOPBIN jar $SIMRJAR $USERJAR $MAINCLASS $@
+HADOOP_USER_CLASSPATH_FIRST=1 HADOOP_CLASSPATH=$SIMRJAR:$SPARKJAR exec $HADOOPBIN jar $SIMRJAR $SPARKJAR $USERJAR $MAINCLASS $@
