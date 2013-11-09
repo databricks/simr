@@ -2,20 +2,20 @@
 
 ## Quick Guide
 
-Download the `simr` runtime script, as well as the `simr.jar` and  `spark-assembly.jar` that match
+Download the `simr` runtime script, as well as the `simr-<hadoop-version>.jar` and  `spark-assembly-<hadoop-version>.jar` that match
 the version of Hadoop your cluster is running. If it is not provided, you will have to build it
 yourself. [See below](#advanced-configuration).
 
 * SIMR runtime script
   + [Download] (https://s3-us-west-1.amazonaws.com/simr-test/simr)
 * SIMR and Spark Jars are provided for the following Hadoop versions:
-  + 1.0.4 (HDP 1.0 - 1.2) [SIMR] (https://s3-us-west-1.amazonaws.com/simr-test/simr-hadoop-1.0.4.jar) / [Spark] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-1.0.4.jar)
-  + 1.2.x (HDP 1.3) [SIMR] (https://s3-us-west-1.amazonaws.com/simr-test/simr-hadoop-1.2.0.jar) / [Spark] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-1.2.0.jar)
-  + 0.20 (CDH3) [SIMR] (https://s3-us-west-1.amazonaws.com/simr-test/simr-cdh3.jar) / [Spark] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-cdh3.jar)
-  + 2.0.0 (CDH4) [SIMR] (https://s3-us-west-1.amazonaws.com/simr-test/simr-cdh4.jar) / [Spark] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-cdh4.jar)
+  + 1.0.4 (HDP 1.0 - 1.2) [SIMR Hadoop 1.0.4] (https://s3-us-west-1.amazonaws.com/simr-test/simr-hadoop-1.0.4.jar) / [Spark Hadoop 1.0.4] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-1.0.4.jar)
+  + 1.2.x (HDP 1.3) [SIMR Hadoop 1.2.0] (https://s3-us-west-1.amazonaws.com/simr-test/simr-hadoop-1.2.0.jar) / [Spark Hadoop 1.2.0] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-1.2.0.jar)
+  + 0.20 (CDH3) [SIMR CDH3] (https://s3-us-west-1.amazonaws.com/simr-test/simr-cdh3.jar) / [Spark CDH3] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-cdh3.jar)
+  + 2.0.0 (CDH4) [SIMR CDH4] (https://s3-us-west-1.amazonaws.com/simr-test/simr-cdh4.jar) / [Spark CDH4] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-cdh4.jar)
 
-Place `simr`, `simr.jar`, and `spark-assembly*.jar` in a directory and call `simr` to get
-usage information. Try running the shell! If you get stuck, continue reading.
+Place `simr`, `simr-<hadoop-version>.jar`, and `spark-assembly-<hadoop-version>.jar` in a directory
+and call `simr` to get usage information. Try running the shell! If you get stuck, continue reading.
 ```shell
 ./simr --shell
 ```
@@ -88,7 +88,8 @@ to ``simr`` or setting the Hadoop configuration parameter
 
 The following sections are targeted at users who aim to run SIMR on versions of Hadoop for which
 jars have not been provided. It is necessary to build both the appropriate version of
-spark-assembly*.jar and simr*.jar and place them in the same directory as the `simr` runtime script.
+`simr-<hadoop-version>.jar` and `spark-assembly-<hadoop-version>.jar` and place them in the same
+directory as the `simr` runtime script.
 
 ## Building Spark
 
@@ -107,9 +108,10 @@ that SIMR will be run on.
    `assembly/target/scala*/spark-assembly-<spark-version>-SNAPSHOT-<hadoop-version>.jar`.
 
 5. Copy `assembly/target/scala*/spark-assembly-<spark-version>-SNAPSHOT-<hadoop-version>.jar` to the
-   same directory as the runtime script `simr` and follow the instructions below to build simr.jar.
+   same directory as the runtime script `simr` and follow the instructions below to build
+   `simr-<hadoop-version>.jar`.
 
-## Building SIMR and simr.jar
+## Building SIMR
 
 1. Checkout the SIMR repository from https://github.com/databricks/simr.git
 
