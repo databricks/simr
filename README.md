@@ -28,8 +28,9 @@ usage information. Try running the shell! If you get stuck, continue reading.
 
 ## Guide
 
-Ensure the `hadoop` executable is in the PATH. If it is not, set
-$HADOOP to point to the binary, or the hadoop/bin directory.
+Ensure the `hadoop` executable is in the PATH. If it is not, set $HADOOP to point to the binary, or
+the hadoop/bin directory. Set `$SIMRJAR` and `$SPARKJAR` to specifiy which SIMR and Spark jars to
+use, otherwise jars will be selected from the current directory.
 
 To run a Spark application, package it up as a JAR file and execute:
 ```shell
@@ -72,8 +73,10 @@ Alternatively, you can launch a Spark-shell like this:
 
 ## Configuration
 
-The `$HADOOP` environment variable should point at the `hadoop` binary
-or its directory.
+The `$HADOOP` environment variable should point at the `hadoop` binary or its directory. To specify
+the SIMR or Spark jar the runtime script should use, set the `$SIMRJAR` and `$SPARKJAR` environment
+variables respectively. If these variables are not set, the runtime script will default to a SIMR
+and Spark jar in the current directory.
 
 By default SIMR figures out the number of task trackers in the cluster
 and launches a job that is the same size as the cluster. This can be

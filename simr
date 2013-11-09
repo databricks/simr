@@ -5,8 +5,13 @@
 # HADOOP=/root/hadoop/bin/hadoop                            #
 #############################################################
 
-SIMRJAR=$(eval "ls -1 simr*.jar | head -1")
-SPARKJAR=$(eval "ls -1 spark*.jar | head -1")
+if [ -z "$SIMRJAR" ]; then
+  SIMRJAR=$(eval "ls -1 simr*.jar | head -1")
+fi
+
+if [ -z "$SPARKJAR" ]; then
+  SPARKJAR=$(eval "ls -1 spark*.jar | head -1")
+fi
 
 #############################################################
 # Set SIMRJAR to point to the desired SIMR jar distribution #
@@ -77,7 +82,14 @@ cd "`dirname $0`"
 if [ ! -f "$SIMRJAR" ];
 then
   echo -e "Error:\n " \
-          "  Couldn't locate $SIMRJAR, make sure it exists in the same directory as this script"
+          "  Couldn't locate SIMRJAR \"$SIMRJAR\", make sure it exists in the same directory as this script"
+  exit 1
+fi
+
+if [ ! -f "$SPARKJAR" ];
+then
+  echo -e "Error:\n " \
+          "  Couldn't locate SPARKJAR \"$SPARKJAR\", make sure it exists in the same directory as this script"
   exit 1
 fi
 
