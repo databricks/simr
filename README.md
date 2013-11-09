@@ -2,19 +2,19 @@
 
 ## Quick Guide
 
-Download the `simr` runtime script and a `simr.jar` that matches the version of Hadoop your cluster
-is running. If it is not provided, you will have to build it yourself. [See
-below](#advanced-configuration).
+Download the `simr` runtime script, as well as the `simr.jar` and  `spark-assembly.jar` that match
+the version of Hadoop your cluster is running. If it is not provided, you will have to build it
+yourself. [See below](#advanced-configuration).
 
 * SIMR runtime script
-  + [Download] (https://s3-us-west-1.amazonaws.com/simr/simr)
-* SIMR jars are provided for the following Hadoop versions:
-  + [1.0.4] (https://s3-us-west-1.amazonaws.com/simr/simr-hadoop1.0.4-untested.jar)
-  + [1.2.x] (https://s3-us-west-1.amazonaws.com/simr/simr-hadoop1.2.0.jar)
-  + [0.20 (CDH3)] (https://s3-us-west-1.amazonaws.com/simr/simr-cdh3.jar)
-  + [2.0.0 (CDH4)] (https://s3-us-west-1.amazonaws.com/simr/simr-cdh4.4.0.jar)
+  + [Download] (https://s3-us-west-1.amazonaws.com/simr-test/simr)
+* SIMR and Spark Jars are provided for the following Hadoop versions:
+  + 1.0.4 (HDP 1.0 - 1.2) [SIMR] (https://s3-us-west-1.amazonaws.com/simr-test/simr-hadoop-1.0.4.jar) / [Spark] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-1.0.4.jar)
+  + 1.2.x (HDP 1.3) [SIMR] (https://s3-us-west-1.amazonaws.com/simr-test/simr-hadoop-1.2.0.jar) / [Spark] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-1.2.0.jar)
+  + 0.20 (CDH3) [SIMR] (https://s3-us-west-1.amazonaws.com/simr-test/simr-cdh3.jar) / [Spark] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-cdh3.jar)
+  + 2.0.0 (CDH4) [SIMR] (https://s3-us-west-1.amazonaws.com/simr-test/simr-cdh4.jar) / [Spark] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-cdh4.jar)
 
-Place `simr` and `simr.jar` in a directory and call `simr` to get
+Place `simr`, `simr.jar`, and `spark-assembly*.jar` in a directory and call `simr` to get
 usage information. Try running the shell! If you get stuck, continue reading.
 ```shell
 ./simr --shell
@@ -24,7 +24,7 @@ usage information. Try running the shell! If you get stuck, continue reading.
 
 * Java v1.6 is required
 * SIMR will ship Scala 2.9.3 and Spark 0.8.1 to the Hadoop cluster and execute your program with them.
-* SIMR jars are provided for Hadoop 1.0.4, 1.2.x, 0.20 (CDH3), 2.0.0 (CDH4)
+* Spark jars are provided for Hadoop 1.0.4 (HDP 1.0 - 1.2), 1.2.x (HDP 1.3), 0.20 (CDH3), 2.0.0 (CDH4)
 
 ## Guide
 
@@ -83,8 +83,9 @@ to ``simr`` or setting the Hadoop configuration parameter
 
 ## Advanced Configuration
 
-The following sections are targeted at users who aim to build the SIMR jar for versions of Hadoop
-for which jars have not been provided.
+The following sections are targeted at users who aim to run SIMR on versions of Hadoop for which
+jars have not been provided. It is necessary to build both the appropriate version of
+spark-assembly*.jar and simr*.jar and place them in the same directory as the `simr` runtime script.
 
 ## Building Spark
 
@@ -102,18 +103,19 @@ that SIMR will be run on.
 4. Run `sbt/sbt assembly` which creates a giant jumbo jar containing all of Spark in
    `assembly/target/scala*/spark-assembly-<spark-version>-SNAPSHOT-<hadoop-version>.jar`.
 
+5. Copy `assembly/target/scala*/spark-assembly-<spark-version>-SNAPSHOT-<hadoop-version>.jar` to the
+   same directory as the runtime script `simr` and follow the instructions below to build simr.jar.
+
 ## Building SIMR and simr.jar
 
 1. Checkout the SIMR repository from https://github.com/databricks/simr.git
 
 2. Copy the Spark jumbo jar into the SIMR `lib/` directory.
+  + **Important**: Ensure the Spark jumbo jar is named `spark-assembly.jar` when placed in the `lib/` directory,
+    otherwise it will be included in the SIMR jumbo jar.
 
-3. Run `sbt/sbt assembly` in the root of the SIMR directory. This will build the SIMR jumbo jar and
-   automatically include the Spark jumbo jar. The final jar will be output as
-   `target/scala*/simr.jar`.
-
-   TODO: This step doesn't work without zip -d lib/spark.jar "META-INF/LICENSE". Have to fix merge
-   rule to deal with this.
+3. Run `sbt/sbt assembly` in the root of the SIMR directory. This will build the SIMR jumbo jar
+   which will be output as `target/scala*/simr.jar`.
 
 4. Copy `target/scala*/simr.jar` to the same directory as the runtime script `simr` and follow the
    instructions above to execute SIMR.
