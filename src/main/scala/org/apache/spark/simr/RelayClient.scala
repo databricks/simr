@@ -87,7 +87,8 @@ object RelayClient extends Logging {
   val SIMR_PROMPT: String = "scala> "
   val SIMR_SYSTEM_NAME = "SimrRelay"
 
-  var hdfsFile: String = null
+  var relayFile: String = null
+  var uiFile: String = null
   var readOnly: Boolean = false
   var actorSystem: ActorSystem = null
 
@@ -96,11 +97,12 @@ object RelayClient extends Logging {
     cmd.parse()
     val args = cmd.getArgs()
 
-    if (args.length != 1) {
-      println("Usage: RelayClient hdfs_file [--readonly]")
+    if (args.length != 2) {
+      println("Usage: RelayClient relay_hdfs_file ui_hdfs_file [--readonly]")
       System.exit(1)
     }
-    hdfsFile = args(0)
+    relayFile = args(0)
+    uiFile = args(1)
     readOnly = cmd.containsCommand("readonly")
   }
 
@@ -124,8 +126,8 @@ object RelayClient extends Logging {
     actorSystem = as
   }
 
-  def getRelayUrl() = {
-    logDebug("Retrieving relay url from hdfs")
+  def getUrl(hdfsFile: String) = {
+    logDebug("Retrieving %s url from hdfs".format(hdfsFile))
     val conf = new Configuration()
     val fs = FileSystem.get(conf)
 
@@ -159,10 +161,10 @@ object RelayClient extends Logging {
     }
 
     var file = fs.open(new Path(hdfsFile))
-    val simrRelayUrl = file.readUTF()
+    val url = file.readUTF()
     file.close()
-    logDebug("RelayUrl: " + simrRelayUrl)
-    simrRelayUrl
+    logDebug("%s: %s".format(hdfsFile, url))
+    url
   }
 
   def readLoop(client: ActorRef) {
@@ -191,11 +193,13 @@ object RelayClient extends Logging {
 
   def main(args: Array[String]) {
     parseParams(args)
-    val relayUrl = getRelayUrl()
+    val relayUrl = getUrl(relayFile)
     setupActorSystem()
     val client = actorSystem.actorOf(Props[RelayClient], "RelayClient")
     logInfo(relayUrl)
     client ! InitClient(relayUrl)
+    val uiUrl = getUrl(uiFile)
+    logInfo("Spark UI: %s".format(uiUrl))
 
     if (readOnly) {
       actorSystem.awaitTermination()
