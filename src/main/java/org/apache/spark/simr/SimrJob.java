@@ -309,11 +309,11 @@ public class SimrJob {
 
         if (cmd.containsCommand("shell")) {
             program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.RELAYURL,
-                                        conf.get("simr_tmp_dir") + "/" + Simr.UIURL};
+                                        conf.get("simr_tmp_dir") + "/" + Simr.DRIVERURL};
         } else {
             program_args = new String[]{conf.get("simr_tmp_dir") + "/" + Simr.RELAYURL,
-                                        conf.get("simr_tmp_dir") + "/" + Simr.UIURL,
-                "--readonly"};
+                                        conf.get("simr_tmp_dir") + "/" + Simr.DRIVERURL,
+                                        "--readonly"};
         }
 
         org.apache.spark.simr.RelayClient.main(program_args);

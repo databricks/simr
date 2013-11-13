@@ -12,7 +12,7 @@ import akka.util.Timeout
 import akka.util.duration._
 import jline_modified.console.ConsoleReader
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{Path, FileSystem, FileStatus}
+import org.apache.hadoop.fs.{Path, FileSystem, FileStatus, FSDataInputStream}
 
 import org.apache.spark.util.AkkaUtils
 import org.apache.spark.Logging
@@ -88,9 +88,12 @@ object RelayClient extends Logging {
   val SIMR_SYSTEM_NAME = "SimrRelay"
 
   var relayFile: String = null
-  var uiFile: String = null
+  var driverFile: String = null
   var readOnly: Boolean = false
   var actorSystem: ActorSystem = null
+
+  val conf = new Configuration()
+  val fs = FileSystem.get(conf)
 
   def parseParams(raw_args: Array[String]) {
     val cmd = new CmdLine(raw_args)
@@ -98,11 +101,11 @@ object RelayClient extends Logging {
     val args = cmd.getArgs()
 
     if (args.length != 2) {
-      println("Usage: RelayClient relay_hdfs_file ui_hdfs_file [--readonly]")
+      println("Usage: RelayClient relay_hdfs_file driver_hdfs_file [--readonly]")
       System.exit(1)
     }
     relayFile = args(0)
-    uiFile = args(1)
+    driverFile = args(1)
     readOnly = cmd.containsCommand("readonly")
   }
 
@@ -126,11 +129,27 @@ object RelayClient extends Logging {
     actorSystem = as
   }
 
-  def getUrl(hdfsFile: String) = {
-    logDebug("Retrieving %s url from hdfs".format(hdfsFile))
-    val conf = new Configuration()
-    val fs = FileSystem.get(conf)
+  def getRelayUrl() = {
+    logDebug("Retrieving relay url from hdfs")
+    val file = getFile(relayFile)
+    val simrRelayUrl = file.readUTF()
+    file.close()
+    logDebug("RelayUrl: " + simrRelayUrl)
+    simrRelayUrl
+  }
 
+  def getUiUrl() = {
+    logDebug("Retrieving ui url from hdfs")
+    val file = getFile(driverFile)
+    val mUrl = file.readUTF()
+    val nCores = file.readInt()
+    val uiUrl = file.readUTF()
+    file.close()
+    logDebug("Spark UI Url: " + uiUrl)
+    uiUrl
+  }
+
+  def getFile(hdfsFile: String): FSDataInputStream = {
     val MAXTRIES = 2*60*5;
     var tries = 0;
     val path = new Path(hdfsFile)
@@ -160,11 +179,7 @@ object RelayClient extends Logging {
       System.exit(1)
     }
 
-    var file = fs.open(new Path(hdfsFile))
-    val url = file.readUTF()
-    file.close()
-    logDebug("%s: %s".format(hdfsFile, url))
-    url
+    fs.open(new Path(hdfsFile))
   }
 
   def readLoop(client: ActorRef) {
@@ -193,12 +208,12 @@ object RelayClient extends Logging {
 
   def main(args: Array[String]) {
     parseParams(args)
-    val relayUrl = getUrl(relayFile)
+    val relayUrl = getRelayUrl()
     setupActorSystem()
     val client = actorSystem.actorOf(Props[RelayClient], "RelayClient")
     logInfo(relayUrl)
     client ! InitClient(relayUrl)
-    val uiUrl = getUrl(uiFile)
+    val uiUrl = getUiUrl()
     logInfo("Spark UI: %s".format(uiUrl))
 
     if (readOnly) {
