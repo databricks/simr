@@ -47,7 +47,7 @@ public class Simr {
 
     private static final String ELECTIONDIR = "election"; // Directory used to do master election
     private static final String UNIQUEDIR = "unique"; // Directory used to do master election
-    private static final String DRIVERURL = "driverurl";  // File used to store Spark driver URL
+    static final String DRIVERURL = "driverurl";  // File used to store Spark driver URL
     static final String RELAYURL = "relayurl";  // File used to store Spark driver URL
 
     static class UrlCoresTuple {
