@@ -46,13 +46,34 @@ class RelayClientSpec extends FlatSpec with ShouldMatchers {
         clientRef ! NewCommand(msg)
         server.recievedNewCommand should be (msg)
     }
+
+    it should "ReplInputLine" in {
+        val msg = "Input Line"
+        clientRef ! ReplInputLine(msg)
+        server.recievedInputLine should be (msg)
+    }
+
+    it should "ShutdownSimr" in {
+        clientRef ! ShutdownSimr()
+        server.shutdown should be (true)
+    }
+
+    it should "ShutdownClient" in {
+        clientRef ! ShutdownClient()
+    }
 }
 
 class DummyServer extends RelayServer(null, null, null, null) {
     var recievedNewCommand = ""
+    var recievedInputLine = ""
+    var shutdown = false
 
     override def receive = {
         case NewCommand(str) =>
             recievedNewCommand = str
+        case ReplInputLine(str) =>
+            recievedInputLine = str
+        case ShutdownSimr() =>
+            shutdown = true
     }
 }

@@ -1,5 +1,7 @@
 package org.apache.spark.simr
 
+import java.io.{PipedWriter, PipedReader, BufferedReader}
+
 import org.scalatest._
 import org.scalatest.matchers._
 
@@ -31,8 +33,40 @@ class RelayServerSpec extends FlatSpec with ShouldMatchers {
     val server = serverRef.underlyingActor
 
     server.client = clientRef
+
+    "A RelayServerActor" should "FlushMessages" in {
+        val msg1 = "stdout"
+        val msg2 = "stderr"
+        val stdoutIn = new PipedReader();
+        val stdoutOut = new PipedWriter(stdoutIn);
+        stdoutOut.write(msg1)
+        server.stdoutReader = new BufferedReader(stdoutIn)
+
+        val stderrIn = new PipedReader();
+        val stderrOut = new PipedWriter(stderrIn);
+        stderrOut.write(msg2)
+        server.stderrReader = new BufferedReader(stderrIn)
+
+        serverRef ! FlushMessages()
+        client.stdout should include (msg1)
+        client.stderr should include (msg2)
+    }
 }
 
 class TestRelayServer extends RelayServer(null, null, null, null)
 
-class DummyClient extends RelayClient
+class DummyClient extends RelayClient {
+    var stdout: String = null
+    var stderr: String = null
+
+    override def receive = {
+        case ReplOutput(buf: Array[Char], size: Int, outType: OutputType) =>
+            outType match {
+                case StdoutOutputType() =>
+                    stdout = new String(buf)
+                case StderrOutputType() =>
+                    stderr = new String(buf)
+
+            }
+    }
+}
