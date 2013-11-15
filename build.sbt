@@ -25,8 +25,11 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
 // Shared between both core and streaming.
 resolvers ++= Seq("Akka Repository" at "http://repo.akka.io/releases/")
 
-excludedJars in assembly <<= (fullClasspath in assembly) map { cp => 
-  cp filter {_.data.getName == "spark-assembly.jar"}
+val jarsToExclude = List("spark-assembly.jar", "akka-testkit-2.0.5.jar", "akka-actor-2.0.5.jar",
+  "scala-library-2.9.3.jar")
+
+excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
+  cp filter {jar => jarsToExclude.contains(jar.data.getName)}
 }
 
 val excludeNetty = ExclusionRule(organization = "org.jboss.netty")
