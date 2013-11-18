@@ -20,8 +20,6 @@ package org.apache.spark.simr;
 
 import java.util.*;
 
-import scala.actors.threadpool.Arrays;
-
 class Cmd {
     public String key;
     public String val;
