@@ -84,6 +84,14 @@ adjusted by supplying the command line parameter ``--slots=<integer>``
 to ``simr`` or setting the Hadoop configuration parameter
 `simr.cluster.slots`.
 
+## Network Configuration
+
+SIMR expects its different components to communicate over the network, which
+requires opening ports for communication. SIMR does not have a set of static
+ports, as this would prevent multiple SIMR jobs from executing simultaneously.
+Instead the ports are in the [Ephemeral Range](http://en.wikipedia.org/wiki/Ephemeral_port).
+For SIMR to function properly ports in the ephemeral range should be opened.
+
 ## Advanced Configuration
 
 The following sections are targeted at users who aim to run SIMR on versions of Hadoop for which
