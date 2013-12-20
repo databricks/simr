@@ -19,9 +19,13 @@
         <h2></h2>
 
         <section id="downloads">
-          <a href="https://github.com/databricks/simr/zipball/master" class="btn">Download as .zip</a>
-          <a href="https://github.com/databricks/simr/tarball/master" class="btn">Download as .tar.gz</a>
-          <a href="https://github.com/databricks/simr" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+          <a href="#quickstart" class="btn">Quick start</a>
+          <a href="#requirements" class="btn">Requirements</a>
+          <a href="#guide" class="btn">Installation</a>
+          <a href="#examples" class="btn">Examples</a>
+          <a href="#configuration" class="btn">Configuration</a>
+          <a href="#building" class="btn">Custom Builds</a>
+          <a href="#simr" class="btn">Under the hood</a>
         </section>
       </div>
     </header>
@@ -35,7 +39,7 @@
 Spark. It enables running Spark jobs, as well as the Spark shell, on
 Hadoop MapReduce clusters without having to install Spark or Scala.</p>
 
-<p>After downloading SIMR, it can be tried out by typing ```./simr --shell```
+<p>After downloading SIMR, it can be tried out by typing<br/> <code>./simr --shell</code>
 <pre><code>$ ./simr --shell
 Welcome to
       ____              __
@@ -53,30 +57,209 @@ Spark context available as sc.
 scala> 
 </code></pre>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
-
 <h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<a name="quickstart" class="anchor" href="#quickstart"><span class="octicon octicon-link"></span></a>Quick Start Guide</h3>
+
+<p>
+Download 3 files: <b>simr</b> runtime script, as well as the </br><b>simr-&lt;hadoop-version>.jar</b> and  </br><b>spark-assembly-&lt;hadoop-version>.jar</b> that match
+the version of Hadoop your cluster is running. If it is not provided, you will have to build it
+yourself. [See below](#advanced-configuration).
+<p>
+
+<p>
+<ul>
+<li> SIMR runtime script: <a href="https://s3-us-west-1.amazonaws.com/simr-test/simr">simr</a>
+<li> SIMR jar for different Hadoop versions:
+  <ul>
+  <li> 1.0.4 (HDP 1.0 - 1.2)<br/> <a href="https://s3-us-west-1.amazonaws.com/simr-test/simr-hadoop-1.0.4.jar">simr-hadoop-1.0.4.jar</a> / <br/><a href="https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-1.0.4.jar">spark-assembly-hadoop-1.0.4.jar</a>
+  <li> 1.2.x (HDP 1.3) <br/> <a href="https://s3-us-west-1.amazonaws.com/simr-test/simr-hadoop-1.2.0.jar">simr-hadoop-1.2.0.jar</a> / <br/> <a href="https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-1.2.0.jar">spark-assembly-hadoop-1.2.0.jar</a>
+  <li> 0.20 (CDH3) <br/> <a href="https://s3-us-west-1.amazonaws.com/simr-test/simr-cdh3.jar">simr-cdh3.jar</a> / <br/><a href="https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-cdh3.jar">spark-assembly-hadoop-cdh3.jar</a>
+  <li> 2.0.0 (CDH4) <br/> <a href="https://s3-us-west-1.amazonaws.com/simr-test/simr-cdh4.jar">simr-cdh4.jar</a> / <br/> <a href="https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-cdh4.jar">spark-assembly-hadoop-cdh4.jar</a>
+  </ul>
+</ul>
+</p>
+
+Place <b>simr</b>, <b>simr-&lt;hadoop-version>.jar</b>, and <b>spark-assembly-&lt;hadoop-version>.jar</b> in a directory
+and execute <b>simr</b> to get usage information. Try running the shell. If you get stuck, continue reading.
+
+<pre>
+<code>
+./simr --shell
+</code>
+</pre>
+
 
 <p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
 
 <h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<a name="requirements" class="anchor" href="#requirements"><span class="octicon octicon-link"></span></a>Requirements</h3>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<p>SIMR automatically includes Scala 2.9.3 and Spark 0.8.1. They are already in the above jars and are thus not required.</p>
 
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+<p>
+<ul>
+<li>Java v1.6
+<li>Hadoop versions 1.0.4 (HDP 1.0 - 1.2), 1.2.x (HDP 1.3), 0.20 (CDH3), 2.0.0 (CDH4)
+</ul>
+</p>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<h3><a name="guide" class="anchor" href="#guide"><span class="octicon octicon-link"></span></a>Installation</h3>
 
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<p>Ensure the <b>hadoop</b> executable is in the PATH. If it is not, set $HADOOP to point to the binary, or
+the <b>hadoop/bin</b> directory. Set <b>$SIMRJAR</b> and <b>$SPARKJAR</b> to specifiy which SIMR and Spark jars to
+use, otherwise jars will be selected from the current directory.</p>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+To run a Spark application, package it up as a JAR file and execute:
+<pre>
+<code>
+./simr jar_file main_class parameters [--outdir=<hdfs_out_dir>] [--slots=N] [--unique]
+</code>
+</pre>
+
+<p>
+<ul>
+<li><b>jar_file</b> is a JAR file containing all your programs, e.g. <b>spark-examples.jar</b>
+<li><b>main_class</b> is the name of the class with a <b>main</b> method, e.g. <b>org.apache.spark.examples.SparkPi</b>
+<li><b>parameters</b> is a list of parameters that will be passed to your <b>main_class</b>.
+ <br/><i>Important</i>: the special parameter <b>%spark_url%</b> will be replaced with the Spark driver URL.
+<li><b>outdir</b> is an optional parameter which sets the path (absolute or relative) in HDFS where your
+  job's output will be stored, e.g. <b>/user/alig/myjob11</b>.
+<br/>If this parameter is not set, a directory will be created using the current time stamp in the
+    form of <b>yyyy-MM-dd_kk_mm_ss</b>, e.g.  <b>2013-12-01_11_12_13</b>
+<li><b>slots</b> is an optional parameter that specifies the number of Map slots SIMR should utilize.  By
+  default, SIMR sets the value to the number of nodes in the cluster.
+<br/>This value must be at least 2, otherwise no executors will be present and the task will never
+    complete.
+<li><b>unique</b> is an optional parameter which ensures that each node in the cluster will run at most 1
+  SIMR executor.
+</ul>
+</p>
+
+Your output will be placed in the <b>outdir</b> in HDFS, this includes output from stdout/stderr for the driver and all executors.
+
+**Important**: to ensure that your Spark jobs terminate without
+  errors, you must end your Spark programs by calling <b>stop()</b> on
+  <b>SparkContext</b>. In the case of the Spark examples, this usually
+  means adding <b>spark.stop()</b> at the end of <b>main()</b>.
+
+<br/>
+<br/>
+
+<h3><a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h3>
+
+<p>
+Assuming <b>spark-examples.jar</b> exists and contains the Spark examples, the following will execute the example that computes pi in 100 partitions in parallel:
+<pre>
+<code>
+./simr spark-examples.jar org.apache.spark.examples.SparkPi %spark_url% 100
+</code>
+</pre>
+
+Alternatively, you can launch a Spark-shell like this:
+<pre>
+<code>
+./simr --shell
+</code>
+</pre>
+</p>
+
+<h3><a name="configuration" class="anchor" href="#configuration"><span class="octicon octicon-link"></span></a>Configuration</h3>
+<p>
+SIMR expects its different components to communicate over the network, which
+requires opening ports for communication. SIMR does not have a set of static
+ports, as this would prevent multiple SIMR jobs from executing simultaneously on the same machines.
+Instead the ports are in the <a href="http://en.wikipedia.org/wiki/Ephemeral_port)">ephemeral range</a>
+For SIMR to function properly ports in the ephemeral range should be opened in firewalls.
+</p>
+<p>
+The <b>$HADOOP</b> environment variable should point at the <b>hadoop</b> binary or its directory. To specify
+the SIMR or Spark jar the runtime script should use, set the <b>$SIMRJAR</b> and <b>$SPARKJAR</b> environment
+variables respectively. If these variables are not set, the runtime script will default to a <b>simr.jar</b>
+and <b>spark.jar</b> in the current directory.
+</p>
+<p>
+By default SIMR figures out the number of task trackers in the cluster
+and launches a job that is the same size as the cluster. This can be
+adjusted by supplying the command line parameter <b>--slots=&lt;integer></b>
+to <b>simr</b> or setting the Hadoop configuration parameter
+<b>simr.cluster.slots</b>.
+</p>
+
+<h3><a name="building" class="anchor" href="#building"><span class="octicon octicon-link"></span></a>Building Custom Versions</h3>
+<p>
+The following sections are targeted at users who aim to run SIMR on versions of Hadoop for which
+jars have not been provided. It is necessary to build both the appropriate version of
+<b>simr-&lt;hadoop-version>.jar</b> and <b>spark-assembly-&lt;hadoop-version>.jar</b> and place them in the same
+directory as the <b>simr</b> runtime script.
+
+<h4>Step 1: Building Spark</h4>
+
+In order to build SIMR, we must first compile a version of Spark that targets the version of Hadoop
+that SIMR will be run on.
+
+<ol>
+<li>Download Spark v0.8.1 or greater.
+
+<li>Unpack and enter the Spark directory.
+
+<li>Modify <b>project/SparkBuild.scala</b>. Change the value of <b>DEFAULT_HADOOP_VERSION</b> to match the version of Hadoop you are targeting, e.g.
+  <br/><b>val DEFAULT_HADOOP_VERSION = "1.2.0"</b>
+
+<li>Run <b>sbt/sbt assembly</b> which creates a giant jumbo jar containing all of Spark in
+   <b>assembly/target/scala*/spark-assembly-&lt;spark-version>-SNAPSHOT-&lt;hadoop-version>.jar</b>.
+
+<li>Copy <b>assembly/target/scala*/spark-assembly-&lt;spark-version>-SNAPSHOT-&lt;hadoop-version>.jar</b> to the
+   same directory as the runtime script <b>simr</b> and follow the instructions below to build
+   <b>simr-&lt;hadoop-version>.jar</b>.
+</ol>
+</p>
+
+<h4>Step 2: Building SIMR</h4>
+
+<p>
+<ol>
+<li>Checkout the SIMR repository from https://github.com/databricks/simr.git
+
+<li>Copy the Spark jumbo jar into the SIMR <b>lib/</b> directory.
+<br/><i>Important</i>: Ensure the Spark jumbo jar is named <b>spark-assembly.jar</b> when placed in the <b>lib/</b> directory,
+    otherwise it will be included in the SIMR jumbo jar.
+
+<li>Run <b>sbt/sbt assembly</b> in the root of the SIMR directory. This will build the SIMR jumbo jar
+   which will be output as <b>target/scala*/simr.jar</b>.
+
+<li>Copy <b>target/scala*/simr.jar</b> to the same directory as the runtime script <b>simr</b> and follow the
+   instructions above to execute SIMR.
+</ol>
+
+</p>
+
+<h3><a name="simr" class="anchor" href="#simr"><span class="octicon octicon-link"></span></a>How it works under the hood</h3>
+<p>
+SIMR launches a Hadoop MapReduce job that only contains mappers. It
+ensures that a jumbo jar (simr.jar), containing Scala and Spark, gets
+uploaded to the machines of the mappers. It also ensures that the job
+jar you specified gets shipped to those nodes.
+</p>
+
+<p>
+Once the mappers are all running with the right dependencies in place,
+SIMR uses HDFS to do leader election to elect one of the mappers as
+the Spark driver. SIMR then executes your job driver, which uses a new
+SIMR scheduler backend that generates and accepts driver URLs of the
+form <b>simr://path</b>.  SIMR thereafter communicates the new driver URL
+to all the mappers, which then start Spark executors. The executors
+connect back to the driver, which executes your program.
+</p>
+
+<p>
+All output to stdout and stderr is redirected to the specified HDFS
+directory. Once your job is done, the SIMR backend scheduler has
+additional functionality to shut down all the executors (hence the new
+required call to <b>stop()</b>).
+</p>
+
       </section>
     </div>
-
     
   </body>
 </html>
