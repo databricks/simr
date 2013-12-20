@@ -39,7 +39,8 @@
 <p>SIMR provides a quick way for Hadoop MapReduce 1 users to use
 Apache Spark. It enables running Spark jobs, as well as the Spark
 shell, on Hadoop MapReduce clusters without having to install Spark or
-Scala. Note that this is for Hadoop MapReduce 1, Hadoop YARN users can
+Scala, or have administrative rights. Note that this is for Hadoop
+MapReduce 1, Hadoop YARN users can
 the <a href="http://spark.incubator.apache.org/docs/latest/running-on-yarn.html">Spark
 on Yarn method</a>.</p>
 
@@ -60,6 +61,10 @@ Spark context available as sc.
 
 scala> 
 </code></pre>
+
+Note that the goal of SIMR is to provide a quick way to try out
+Spark. While this suffices for batch and interactive jobs, we
+recommend installing Spark for production use.
 
 <h3>
 <a name="quickstart" class="anchor" href="#quickstart"><span class="octicon octicon-link"></span></a>Quick Start Guide</h3>
