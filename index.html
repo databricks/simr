@@ -52,7 +52,7 @@ Welcome to
    /___/ .__/\_,_/_/ /_/\_\   version 0.8.1
       /_/
 
-Using Scala version 2.9.3 (Java HotSpot(TM) 64-Bit Server VM, Java 1.6.0_65)
+Using Scala version 2.9.3 (Java HotSpot(TM) 64-Bit VM, Java 1.6.0_65)
 Type in expressions to have them evaluated.
 Type :help for more information.
 Created spark context..
@@ -110,7 +110,7 @@ and execute <b>simr</b> to get usage information. Try running the shell. If you 
 <h3><a name="guide" class="anchor" href="#guide"><span class="octicon octicon-link"></span></a>Installation</h3>
 
 <p>Ensure the <b>hadoop</b> executable is in the PATH. If it is not, set $HADOOP to point to the binary, or
-the <b>hadoop/bin</b> directory. Set <b>$SIMRJAR</b> and <b>$SPARKJAR</b> to specifiy which SIMR and Spark jars to
+the <b>hadoop/bin</b> directory. Set <b>$SIMRJAR</b> and <b>$SPARKJAR</b> to specify which SIMR and Spark jars to
 use, otherwise jars will be selected from the current directory.</p>
 
 To run a Spark application, package it up as a JAR file and execute:
@@ -122,7 +122,7 @@ To run a Spark application, package it up as a JAR file and execute:
 
 <p>
 <ul>
-<li><b>jar_file</b> is a JAR file containing all your programs, e.g. <b>spark-examples.jar</b>
+<li><b>jar_file</b> is a JAR file containing all your programs, e.g. <b>spark-examples.jar</b>. Note that this jar file should contain all the third party dependencies that your job has (this can be achieved with the Maven assembly plugin or sbt-assembly).
 <li><b>main_class</b> is the name of the class with a <b>main</b> method, e.g. <b>org.apache.spark.examples.SparkPi</b>
 <li><b>parameters</b> is a list of parameters that will be passed to your <b>main_class</b>.
  <br/><i>Important</i>: the special parameter <b>%spark_url%</b> will be replaced with the Spark driver URL.
@@ -172,7 +172,7 @@ Alternatively, you can launch a Spark-shell like this:
 SIMR expects its different components to communicate over the network, which
 requires opening ports for communication. SIMR does not have a set of static
 ports, as this would prevent multiple SIMR jobs from executing simultaneously on the same machines.
-Instead the ports are in the <a href="http://en.wikipedia.org/wiki/Ephemeral_port)">ephemeral range</a>
+Instead the ports are in the <a href="http://en.wikipedia.org/wiki/Ephemeral_port">ephemeral range</a>
 For SIMR to function properly ports in the ephemeral range should be opened in firewalls.
 </p>
 <p>
