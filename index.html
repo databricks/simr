@@ -26,6 +26,7 @@
           <a href="#configuration" class="btn">Configuration</a>
           <a href="#building" class="btn">Custom Builds</a>
           <a href="#simr" class="btn">Under the hood</a>
+          <a href="#about" class="btn">About</a>
         </section>
       </div>
     </header>
@@ -35,9 +36,12 @@
         <h3>
 <a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>What is SIMR?</h3>
 
-<p>SIMR provides a quick way for Hadoop MapReduce users to use Apache
-Spark. It enables running Spark jobs, as well as the Spark shell, on
-Hadoop MapReduce clusters without having to install Spark or Scala.</p>
+<p>SIMR provides a quick way for Hadoop MapReduce 1 users to use
+Apache Spark. It enables running Spark jobs, as well as the Spark
+shell, on Hadoop MapReduce clusters without having to install Spark or
+Scala. Note that this is for Hadoop MapReduce 1, Hadoop YARN users can
+the <a href="http://spark.incubator.apache.org/docs/latest/running-on-yarn.html">Spark
+on Yarn method</a>.</p>
 
 <p>After downloading SIMR, it can be tried out by typing<br/> <code>./simr --shell</code>
 <pre><code>$ ./simr --shell
@@ -99,7 +103,7 @@ and execute <b>simr</b> to get usage information. Try running the shell. If you 
 <p>
 <ul>
 <li>Java v1.6
-<li>Hadoop versions 1.0.4 (HDP 1.0 - 1.2), 1.2.x (HDP 1.3), 0.20 (CDH3), 2.0.0 (CDH4)
+<li>Hadoop versions 1.0.4 (HDP 1.0 - 1.2), 1.2.x (HDP 1.3), 0.20 (CDH3), 2.0.0 (CDH4). 
 </ul>
 </p>
 
@@ -257,6 +261,9 @@ directory. Once your job is done, the SIMR backend scheduler has
 additional functionality to shut down all the executors (hence the new
 required call to <b>stop()</b>).
 </p>
+
+<h3><a name="about" class="anchor" href="#about"><span class="octicon octicon-link"></span></a>About</h3>
+SIMR was jointly developed by <a href="http://www.databricks.com">databricks</a> and UC Berkeley <a href="http://amplab.cs.berkeley.edu">AMPLab</a> under the <a href="http://apache.org/licenses/LICENSE-2.0.html">Apache license</a>.
 
       </section>
     </div>
