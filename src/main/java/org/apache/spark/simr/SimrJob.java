@@ -47,6 +47,8 @@ public class SimrJob {
     private static final String SPARKJAR = "spark.jar"; // Spark assembly jar
     private static final String SIMRTMPDIR = "simr-meta"; // Main HDFS directory used for SimrJob
     private static final String SIMRVER = "0.6";
+    private static final int DEFAULT_SIMR_TIMEOUT_MILLISEC = Integer.MAX_VALUE; //Workaround for https://issues.apache.org/jira/browse/MAPREDUCE-1905
+
     CmdLine cmd;
 
     private final Logger log = LoggerFactory.getLogger(this.getClass().getName());
@@ -111,6 +113,8 @@ public class SimrJob {
             System.err.println("                     files in this directory on hdfs.");
             System.err.println("                     If no directory name is set, it will be generated based on the date");
             System.err.println("                     and time of the invocation of the job.");
+            System.err.println("  --timeout-minutes=<minutes> The max time in minutes that simr will work.");
+            System.err.println("                              This is workaround for https://issues.apache.org/jira/browse/MAPREDUCE-1905");
             System.exit(1);
         }
 
@@ -248,6 +252,12 @@ public class SimrJob {
             conf.set("simr_jar_file", jar_file);
             conf.set("simr_main_class", main_class);
             conf.set("simr_rest_args", rest_args);
+        }
+
+        if (cmd.containsCommand("timeout-minutes")) {
+            conf.setInt("mapred.task.timeout", cmd.getIntValue("timeout-minutes")*60*1000);
+        } else {
+            conf.setInt("mapred.task.timeout", DEFAULT_SIMR_TIMEOUT_MILLISEC);
         }
     }
 
