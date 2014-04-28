@@ -195,12 +195,21 @@ object RelayClient extends Logging {
     var line: String = ""
 
     do {
-      line = console.readLine()
-      if (line != null) {
-        val future = client ? ReplInputLine(line + "\n")
-        try {
-          val result = Await.result(future, timeout.duration).asInstanceOf[String]
-        } catch { case ex: TimeoutException => Unit }
+      try {
+        line = console.readLine()
+        if (line != null) {
+          val future = client ? ReplInputLine(line + "\n")
+          try {
+            val result = Await.result(future, timeout.duration).asInstanceOf[String]
+          } catch { case ex: TimeoutException => Unit }
+        }
+
+      } catch { case ex: RuntimeException => {
+        println("Cannot parse command line: \"" + line + "\": error \"" + ex.getMessage + "\"");
+        logError("Cannot parse command line:", ex)
+        console.killLine();
+        line = ""
+        }
       }
     } while (line != null && line.stripLineEnd != "exit")
     client ! ShutdownSimr()
