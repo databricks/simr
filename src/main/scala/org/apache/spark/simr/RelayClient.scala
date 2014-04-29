@@ -189,6 +189,7 @@ object RelayClient extends Logging {
     console.setPrompt("")
     console.setPromptLen(RelayClient.SIMR_PROMPT.length)
     console.setSearchPrompt(RelayClient.SIMR_PROMPT)
+    console.setExpandEvents(false)
 
     implicit val timeout = Timeout(2 seconds)
 
