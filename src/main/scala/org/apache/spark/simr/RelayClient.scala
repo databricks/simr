@@ -204,12 +204,13 @@ object RelayClient extends Logging {
           line = "";
         }
       }
-        if (line != null) {
-          val future = client ? ReplInputLine(line + "\n")
-          try {
-            val result = Await.result(future, timeout.duration).asInstanceOf[String]
-          } catch { case ex: TimeoutException => Unit }
-        }
+
+      if (line != null) {
+        val future = client ? ReplInputLine(line + "\n")
+        try {
+          val result = Await.result(future, timeout.duration).asInstanceOf[String]
+        } catch { case ex: TimeoutException => Unit }
+      }
     } while (line != null && line.stripLineEnd != "exit")
     client ! ShutdownSimr()
   }
