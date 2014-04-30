@@ -189,13 +189,23 @@ object RelayClient extends Logging {
     console.setPrompt("")
     console.setPromptLen(RelayClient.SIMR_PROMPT.length)
     console.setSearchPrompt(RelayClient.SIMR_PROMPT)
+    console.setExpandEvents(false)
 
     implicit val timeout = Timeout(2 seconds)
 
     var line: String = ""
 
     do {
-      line = console.readLine()
+      try {
+        line = console.readLine()
+      } catch { case ex: RuntimeException => {
+          println("Cannot parse command line: \"" + ex.getMessage + "\"");
+          logError("Cannot parse command line:", ex)
+          console.killLine();
+          line = "";
+        }
+      }
+
       if (line != null) {
         val future = client ? ReplInputLine(line + "\n")
         try {
