@@ -7,12 +7,12 @@ the version of Hadoop your cluster is running. If it is not provided, you will h
 yourself. [See below](#advanced-configuration).
 
 * SIMR runtime script
-  + [Download] (https://s3-us-west-1.amazonaws.com/simr-test/simr)
+  + [Download] ()
 * SIMR and Spark Jars are provided for the following Hadoop versions:
-  + 1.0.4 (HDP 1.0 - 1.2) [SIMR Hadoop 1.0.4] (https://s3-us-west-1.amazonaws.com/simr-test/simr-hadoop-1.0.4.jar) / [Spark Hadoop 1.0.4] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-1.0.4.jar)
-  + 1.2.x (HDP 1.3) [SIMR Hadoop 1.2.0] (https://s3-us-west-1.amazonaws.com/simr-test/simr-hadoop-1.2.0.jar) / [Spark Hadoop 1.2.0] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-1.2.0.jar)
-  + 0.20 (CDH3) [SIMR CDH3] (https://s3-us-west-1.amazonaws.com/simr-test/simr-cdh3.jar) / [Spark CDH3] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-cdh3.jar)
-  + 2.0.0 (CDH4) [SIMR CDH4] (https://s3-us-west-1.amazonaws.com/simr-test/simr-cdh4.jar) / [Spark CDH4] (https://s3-us-west-1.amazonaws.com/simr-test/spark-assembly-hadoop-cdh4.jar)
+  + 1.0.4 (HDP 1.0 - 1.2) [SIMR Hadoop 1.0.4] () / [Spark Hadoop 1.0.4] ()
+  + 1.2.x (HDP 1.3) [SIMR Hadoop 1.2.0] () / [Spark Hadoop 1.2.0] ()
+  + 0.20 (CDH3) [SIMR CDH3] () / [Spark CDH3] ()
+  + 2.0.0 (CDH4) [SIMR CDH4] () / [Spark CDH4] ()
 
 Place `simr`, `simr-<hadoop-version>.jar`, and `spark-assembly-<hadoop-version>.jar` in a directory
 and call `simr` to get usage information. Try running the shell! If you get stuck, continue reading.
